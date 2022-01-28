@@ -8,69 +8,29 @@ local buffs = require('behaviors.buffs')
 local healing = require('behaviors.healing');
 local jwhm = require('jobs.whm');
 local magic = require('magic');
+local levels = require('levels');
 
 local spells = packets.spells;
 local status = packets.status;
 local stoe = packets.stoe;
 
-local spell_levels = {};
-spell_levels[spells.KNIGHTS_MINNE] = 1;
-spell_levels[spells.VALOR_MINUET] = 3;
-spell_levels[spells.ARMYS_PAEON] = 5;
-spell_levels[spells.FOE_REQUIEM] = 7;
-spell_levels[spells.HERB_PASTORAL] = 9;
-spell_levels[spells.LIGHTNING_THRENODY] = 10;
-spell_levels[spells.SWORD_MADRIGAL] = 11;
-spell_levels[spells.DARK_THRENODY] = 12;
-spell_levels[spells.EARTH_THRENODY] = 14;
-spell_levels[spells.ARMYS_PAEON_II] = 15;
-spell_levels[spells.FOE_LULLABY] = 16;
-spell_levels[spells.WATER_THRENODY] = 16;
-spell_levels[spells.FOE_REQUIEM_II] = 17;
-spell_levels[spells.WIND_THRENODY] = 18;
-spell_levels[spells.FIRE_THRENODY] = 20;
-spell_levels[spells.KNIGHTS_MINNE_II] = 21;
-spell_levels[spells.ICE_THRENODY] = 22;
-spell_levels[spells.VALOR_MINUET_II] = 23;
-spell_levels[spells.LIGHTNING_THRENODY] = 24;
-spell_levels[spells.MAGES_BALLAD] = 25;
-spell_levels[spells.HORDE_LULLABY] = 27;
-spell_levels[spells.MAGIC_FINALE] = 33;
-spell_levels[spells.ARMYS_PAEON_III] = 35;
-spell_levels[spells.FOE_REQUIEM_III] = 37;
-spell_levels[spells.RAPTOR_MAZURKA] = 37;
-spell_levels[spells.BATTLEFIELD_ELEGY] = 39;
-spell_levels[spells.VALOR_MINUET_III] = 43;
-spell_levels[spells.ARMYS_PAEON_IV] = 45;
-spell_levels[spells.ICE_CAROL] = 46;
-spell_levels[spells.FOE_REQUIEM_IV] = 47;
-spell_levels[spells.BLADE_MADRIGAL] = 51;
-spell_levels[spells.MAGES_BALLAD_II] = 55;
-spell_levels[spells.FOE_REQUIEM_V] = 57;
-spell_levels[spells.VICTORY_MARCH] = 60;
-spell_levels[spells.ARMYS_PAEON_V] = 65;
-spell_levels[spells.FOE_REQUIEM_VI] = 67;
-spell_levels[spells.CHOCOBO_MAZURKA] = 73;
+
 
 -- spells to effect
 
 local jbrd = {
-  spell_levels = spell_levels,
   stack_toggle = 0;
 };
 
 function jbrd:tick()
   local cnf = config:get();
   local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();
-  if (cnf.ATTACK_TID and tid ~= cnf.ATTACK_TID) then
-    cnf.ATTACK_TID = nil;
-    AshitaCore:GetChatManager():QueueCommand("/follow " .. cnf.leader, 1);
-  end
-
+  local tp = AshitaCore:GetDataManager():GetParty():GetMemberCurrentTP(0);
+  local status = party:GetBuffs(0);
   if (actions.busy) then return end
+  if (status[packets.status.EFFECT_INVISIBLE]) then return end
   if (not(cnf.bard.sing)) then return end
 
-  local status = party:GetBuffs(0);
   local statustbl = AshitaCore:GetDataManager():GetPlayer():GetStatusIcons();
   if (status[packets.status.EFFECT_INVISIBLE]) then return end
 
@@ -89,11 +49,14 @@ function jbrd:tick()
       end
     end
     if (cnf.bard.songvar1 and need) then
-      if (buffs:CanCast(spells[cnf.bard.songvar1], spell_levels)) then
+      local spell = magic:highest(cnf.bard.song1, false);
+      if (spell) then
         actions.busy = true;
         actions:queue(actions:new()
-        :next(partial(magic.cast, magic, '"' .. cnf.bard.song1 .. '"', '<me>'))
-        :next(partial(wait, 7))
+        :next(partial(actions.pause, true))
+        :next(partial(magic.cast, magic, spell , '<me>'))
+        :next(partial(wait, 8))
+        :next(partial(actions.pause, false))
         :next(function(self) actions.busy = false; end));
         return;
       end
@@ -101,7 +64,7 @@ function jbrd:tick()
   end
 
   if (not(not(cnf.bard.songvar2)) and ashita.ffxi.recast.get_spell_recast_by_index(spells[cnf.bard.songvar2]) == 0) then
-    need = not(status[stoe[cnf.bard.songvar2]]);
+    local need = not(status[stoe[cnf.bard.songvar2]]);
     if (not(need) and stoe[cnf.bard.songvar1] == stoe[cnf.bard.songvar2]) then
       local buffcount = 0;
       for slot = 0, 31, 1 do
@@ -115,74 +78,92 @@ function jbrd:tick()
       end
     end
     if (cnf.bard.songvar2 and need) then
-      if (buffs:CanCast(spells[cnf.bard.songvar2], spell_levels)) then
+        local spell = magic:highest(cnf.bard.song2, false);
+      if (spell) then
         actions.busy = true;
         actions:queue(actions:new()
-          :next(partial(magic.cast, magic, '"' .. cnf.bard.song2 .. '"', '<me>'))
-          :next(partial(wait, 7))
+          :next(partial(actions.pause, true))
+          :next(partial(magic.cast, magic, spell , '<me>'))
+          :next(partial(wait, 8))
+          :next(partial(actions.pause, false))
           :next(function(self) actions.busy = false; end));
         return;
       end
     end
   end
 
-  -- if (healing:SupportHeal(spell_levels)) then return end
-
+  if (healing:SupportHeal()) then return end
+  
 end
 
 function jbrd:attack(tid)
   local cnf = config:get();
-  local action = actions:new();
 
   if (cnf['bard']['melee']) then
-    action:next(function(self)
+    actions:queue(actions:new()
+    :next(function(self)
       AshitaCore:GetChatManager():QueueCommand('/attack ' .. tid, 0);
     end)
     :next(function(self)
       cnf.ATTACK_TID = tid;
       AshitaCore:GetChatManager():QueueCommand('/follow ' .. tid, 0);
     end)
-    :next(partial(wait, 10));
+    :next(partial(wait, 4)));
   end
-
-  if (buffs:CanCast(spells.BATTLEFIELD_ELEGY, spell_levels)) then
-    actions.busy = true;
-    action:next(partial(magic.cast, magic, '"Battlefield Elegy"', tid))
-    :next(partial(wait, 7));
-  end
-
-  local spell = magic:highest('FOE_REQUIEM', spell_levels);
+  local spell = magic:highest('Foe Requiem', false);
   if (spell) then
     actions.busy = true;
-    action:next(partial(magic.cast, magic, '"' .. spell .. '"', tid))
-      :next(partial(wait, 7));
+      actions:queue(actions:new()
+      :next(partial(actions.pause, true))
+      :next(partial(magic.cast, magic, spell , tid))
+      :next(partial(wait, 2))
+      :next(partial(actions.pause, false)));
+  end
+  
+
+  if (magic:CanCast('BATTLEFIELD_ELEGY')) then
+    actions.busy = true;
+    actions:queue(actions:new()
+    :next(partial(actions.pause, true))
+    :next(partial(magic.cast, magic, 'Battlefield Elegy', tid))
+    :next(partial(wait, 2))
+    :next(partial(actions.pause, false))
+    :next(function(self) actions.busy = false; end));
   end
 
-  local sub = AshitaCore:GetDataManager():GetPlayer():GetSubJob();
-  if (sub == Jobs.WhiteMage and buffs:CanCast(spells.DIA, jwhm.spell_levels)) then
+ 
+
+  spell = magic:highest('Dia', false);
+  if (spell) then
     actions.busy = true;
-    action:next(partial(magic.cast, magic, 'Dia', tid))
-      :next(partial(wait, 5));
+    
+    actions:queue(actions:new()
+      :next(partial(actions.pause, true))
+      :next(partial(magic.cast, magic, spell, tid))
+      :next(partial(wait, 1))
+      :next(partial(actions.pause, false)));
   end
 
-  if (buffs:CanCast(spells.LIGHTNING_THRENODY, spell_levels)) then
+  if (magic:CanCast('LIGHTNING_THRENODY')) then
     actions.busy = true;
-    action:next(partial(magic.cast, magic, '"Ltng. Threnody"', tid))
-      :next(partial(wait, 7));
+    action:next(partial(magic.cast, magic, 'Lightning Threnody', tid))
+      :next(partial(wait, 2));
   end
-  action:next(function(self) actions.busy = false; end);
-  actions:queue(action);
+  actions:queue(actions:new()
+  :next(function(self) actions.busy = false; end));
 end
 
 function jbrd:sleep(tid, aoe)
-  if (not(aoe) and magic:can(spells.FOE_LULLABY, spell_levels)) then
+  if (not(aoe) and magic:CanCast(spells.FOE_LULLABY)) then
     actions:queue(actions:new()
-      :next(partial(magic.cast, magic, '"Foe Lullaby"', tid))
-      :next(partial(wait, 7)));
-  elseif (aoe and magic:can(spells.HORDE_LULLABY, spell_levels)) then
+    :next(partial(actions.pause, true))
+      :next(partial(magic.cast, magic, 'Foe Lullaby', tid))
+      :next(partial(wait, 2)))
+      :next(partial(actions.pause, false));
+  elseif (aoe and magic:CanCast(spells.HORDE_LULLABY)) then
     actions:queue(actions:new()
-      :next(partial(magic.cast, magic, '"Horde Lullaby"', tid))
-      :next(partial(wait, 7)));
+      :next(partial(magic.cast, magic, 'Horde Lullaby', tid))
+      :next(partial(wait, 2)));
   end
 end
 
@@ -194,10 +175,10 @@ function jbrd:bard(bard, command, song, silent)
   local song2 = brd['song2'] or 'none';
 
   local songvar;
+
   if(song ~= nil) then
     songvar = song:upper():gsub("'", ""):gsub(" ", "_");
   end
-
   if (command ~= nil) then
     if (command == 'on' or command == 'true') then
       brd['sing'] = true;

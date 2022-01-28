@@ -18,6 +18,7 @@ return {
 
   tick = function(self)
     if (actions.busy) then return end
+    if (party:GetBuffs(0)[packets.status.EFFECT_INVISIBLE]) then return end
     if (healing:DNCHeal(spell_levels)) then return end
 
     local cnf = config:get();
@@ -33,8 +34,8 @@ return {
       if (tp >= 150 and buffs:IsAble(abilities.DRAIN_SAMBA, ability_levels) and status[stoe.DRAIN_SAMBA] ~= true) then
         actions.busy = true;
         actions:queue(actions:new()
-          :next(partial(ability, '"Drain Samba"', '<me>'))
-          :next(partial(wait, 8))
+          :next(partial(ability, 'Drain Samba', '<me>'))
+          :next(partial(wait, 4))
           :next(function(self) actions.busy = false; end));
         return true;
       end

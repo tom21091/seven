@@ -35,7 +35,7 @@ local actions = {
     end)
     :next(function(self, stalled, id, size, packet)
       if (stalled == true) then -- npcs get contention when talked to repeatedly (even by other players)
-        if (self.__count ~= nil and self.__count >= 15) then -- bail
+        if (self.__count ~= nil and self.__count >= 3) then -- bail
           print('I give up');
           return;
         end
@@ -100,8 +100,8 @@ local actions = {
       table.remove(queue, 1);
       self:tick();
     elseif (action.waiting == 'wait') then
-      action.wait = (action.wait or 0) - 1;
-      -- print('waiting 1 tick, ' .. action.wait);
+      action.wait = (action.wait or 0) - 0.5;
+      --print('waiting 1 tick, ' .. action.wait);
       if (action.wait <= 0) then
         action.waiting = nil;
       end
@@ -152,7 +152,7 @@ local actions = {
     local actions = self;
     actions:queue(
       actions:InteractNpc(tid, tidx)
-      :next(function(self) return 'wait', 4; end) -- wait 4 ticks
+      :next(function(self) return 'wait', 2; end) -- wait 2 seconds
       :next(function(self, stalled) -- kill the text menu from the book
         self.esc = true;
         AshitaCore:GetChatManager():QueueCommand('/sendkey escape down', -1);
@@ -191,7 +191,7 @@ local actions = {
     local actions = self;
     actions:queue(
       actions:InteractNpc(tid, tidx)
-      :next(function(self) return 'wait', 4; end) -- wait 4 ticks
+      :next(function(self) return 'wait', 2; end) -- wait 2 seconds
       :next(function(self, stalled) -- kill the text menu from the book
         self.esc = true;
         AshitaCore:GetChatManager():QueueCommand('/sendkey escape down', -1);
@@ -298,8 +298,32 @@ local actions = {
   leader = function(self, leader)
     config:get().leader = leader;
     print(config:get().leader);
-  end
+    config:save();
+  end,
+  
+  tank = function(self, tank)
+    config:get().tank = tank;
+    print(config:get().tank);
+    config:save();
+  end,
 
+  pause = function(stop)
+    local cnf = config.get();
+    if (cnf==nil)then print('CNF nil'); return end
+    if(stop==true)then--Stopping
+      if (cnf['stay'] == nil) then
+        cnf['stay'] = true;
+        AshitaCore:GetChatManager():QueueCommand("/sendkey numpad7 down", -1);
+      elseif (cnf['stay'] == true) then
+        cnf['stay'] = nil;
+        AshitaCore:GetChatManager():QueueCommand("/sendkey numpad7 up", -1);
+      end
+    else--Back to following
+      if(cnf['follow']==true)then
+        AshitaCore:GetChatManager():QueueCommand("/follow ".. cnf.leader, -1);
+      end
+    end
+  end
 };
 
 return actions;

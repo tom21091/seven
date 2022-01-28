@@ -6,7 +6,6 @@ local fov = require('fov');
 local jbrd = require('jobs.brd');
 local jcor = require('jobs.cor');
 local jsmn = require('jobs.smn');
-local jgeo = require('jobs.geo');
 
 local queue = {};
 local start = 0;
@@ -17,27 +16,34 @@ return {
 
   process = function(self, id, size, packet)
     local chatType = struct.unpack('b', packet, 0x4 + 1);
+	
     if (chatType ~= packets.CHAT_TYPE_LINKSHELL2) then return end
 
     local player = AshitaCore:GetDataManager():GetPlayer();
-    local actor = struct.unpack('s', packet, 0x8 + 1);
-
-    local idSize = struct.unpack('H', packet, 0x00 + 1);
-    local msgSize = (4 * (bit.rshift(idSize, 9)) - 0x18) + 1;
-    local msg = struct.unpack(string.format('c%d', msgSize), packet, 0x17 + 1);
+    local actor = struct.unpack('s', packet, 0x8+1);
+    local msg = struct.unpack('s', packet, 0x18);
     local args = msg:args();
-
     if (args[1] == 'leader') then
       actions:leader(actor);
-      config:save();
+	    AshitaCore:GetChatManager():QueueCommand("/l2 Leader set to ".. actor, 1);
+    elseif(args[1] == 'tank')then
+      actions:tank(args[2]);
+      AshitaCore:GetChatManager():QueueCommand("/l2 Tank set to ".. args[2], 1);
+	elseif (args[1] == 'searchws') then
+	  self:SearchWeaponSkill(args[2])
     end
 
     -- If we're the leader...  then don't listen.
     if (config:get().leader == GetPlayerEntity().Name) then return end
 
-    if (args[1] == 'follow') then
+    if (args[1] == 'followme') then
+      self:followme();
+    elseif (args[1] == 'follow') then
       self:follow(actor);
     elseif (args[1] == 'stay') then
+      local cnf = config:get();
+      cnf['follow'] = false;
+      config:save();
       self:stay();
     elseif (args[1] == 'reload') then
       self:reload();
@@ -59,7 +65,13 @@ return {
     elseif (args[1] == 'debuff') then
       combat:debuff(tonumber(args[2]));
     elseif (args[1] == 'nuke') then
-      combat:nuke(tonumber(args[2]));
+      if (args[3]~=nil)then
+        combat:nuke(tonumber(args[2]), args[3]);
+      else
+        combat:nuke(tonumber(args[2]));
+      end
+    elseif (args[1] == 'heal') then
+      self:rest();
     elseif (args[1] == 'sleep') then
       combat:sleep(tonumber(args[2]));
     elseif (args[1] == 'sleepga') then
@@ -74,25 +86,95 @@ return {
       else
         AshitaCore:GetChatManager():QueueCommand('/item "Instant Warp" <me>', -1);
       end
+    elseif (args[1] == 'warp')then
+      AshitaCore:GetChatManager():QueueCommand('/item "Warp Ring" <me>', -1);
     elseif (args[1] == 'idlebuffs') then
       self:SetIdleBuffs(args[2]);
     elseif (args[1] == 'sneakytime') then
       self:SetSneakyTime(args[2]);
     elseif (args[1] == 'talk') then
       actions:queue(actions:InteractNpc(args[2], args[3]));
-    elseif (args[1] == 'setweaponskill') then
+    elseif (args[1] == 'autocast') then
+      self:SetAutoCast(args[2],args[3]);
+    elseif (args[1] == 'autopos') then
+      if (string.lower(args[2]) == 'on' or string.lower(args[2]) == 'off') then
+        self:SetAutoPosition(nil, args[2]);
+      elseif (args[3] ~= nil) then
+        self:SetAutoPosition(args[2], args[3]);
+      end
+    elseif (args[1] == 'autows') then
+      if (string.lower(args[2]) == 'on' or string.lower(args[2]) == 'off') then
+        self:SetAutoWS(nil, args[2]);
+      elseif (args[3] ~= nil) then
+        self:SetAutoWS(args[2], args[3]);
+      end
+    elseif (args[1] == 'ws') then
+      actions:queue(actions:new()
+            :next(function(self)print("Start wait"); end)
+            :next(partial(wait, 3))
+            :next(function(self)print("Done waiting"); end))
+      combat:ws(tonumber(args[2]));
+    elseif (args[1] == 'setws') then
       self:SetWeaponSkill(args[2], args[3]);
-    elseif (args[1] == 'bard' and (Jobs.Bard == player:GetMainJob() or Jobs.Bard == player:GetSubJob())) then
+    elseif (args[1] == 'setsmn') then
+      if (args[2] == GetPlayerEntity().Name and args[3] ~= nil) then
+        local cnf = config:get();
+        cnf['summon'] = args[3];
+        print ("Set Summon to ".. args[3]);
+      end
+    config:save();
+    elseif (args[1] == 'bard') then
+	  if(Jobs.Bard == player:GetMainJob() or Jobs.Bard == player:GetSubJob())then
       jbrd:bard(unpack(args));
+	  end
     elseif (args[1] == 'corsair' and (Jobs.Corsair == player:GetMainJob() or Jobs.Corsair == player:GetSubJob())) then
       jcor:corsair(unpack(args));
     elseif (args[1] == 'summoner' and (Jobs.Summoner == player:GetMainJob() or Jobs.Summoner == player:GetSubJob())) then
       jsmn:summoner(unpack(args));
-    elseif (args[1] == 'geo' and (Jobs.Geomancer == player:GetMainJob() or Jobs.Geomancer == player:GetSubJob())) then
-      jgeo:geo(unpack(args));
+    elseif (args[1] == 'escape')then
+      self:escape();
+      self:followme();
+    elseif (args[1] == 'relax')then
+      self:relax();
     elseif (args[1] == 'corn') then
       actions:corn(args[2], args[3]);
     end
+  end,
+
+  SetAutoCast = function(self, name, value)
+    if(string.lower(name) ~= string.lower(GetPlayerEntity().Name))then return end
+    local cnf = config:get();
+    cnf['AutoCast'] = value == 'true' or value == 'on';
+    if(cnf['AutoCast'])then print("Autocast ON");
+    else print("Autocast OFF");
+    end
+    config:save();
+  end,
+
+  SetAutoWS = function(self, name, value)
+    value = string.lower(value);
+    if (name ~= nil)then
+      if(string.lower(name) ~= string.lower(GetPlayerEntity().Name))then return end
+    end
+    local cnf = config:get();
+    cnf['AutoWS'] = value == 'true' or value == 'on';
+    if(cnf['AutoWS'])then print("AutoWS ON");
+    else print("AutoWS OFF");
+    end
+    config:save();
+  end,
+
+  SetAutoPosition = function(self, name, value)
+    value = string.lower(value);
+    if (name ~= nil)then
+      if(string.lower(name) ~= string.lower(GetPlayerEntity().Name))then return end
+    end
+    local cnf = config:get();
+    cnf['AutoPosition'] = value == 'true' or value == 'on';
+    if(cnf['AutoPosition'])then print("AutoPosition ON");
+    else print("AutoPosition OFF");
+    end
+    config:save();
   end,
 
   SetIdleBuffs = function(self, value)
@@ -116,9 +198,11 @@ return {
   SetWeaponSkill = function(self, player, value)
     --split out player and value
     local pv = { };
-    if (tonumber(value) ~= nil and player == GetPlayerEntity().Name) then
+    print(player, value);
+    if (value ~= nil and player == GetPlayerEntity().Name) then
       local cnf = config:get();
-      cnf['WeaponSkillID'] = tonumber(value);
+      cnf['WeaponSkill'] = value;
+      print('Weaponskill set to '.. cnf['WeaponSkill']);
       config:save();
     end
   end,
@@ -151,6 +235,15 @@ return {
     end
   end,
 
+  followme = function(self)
+    local cnf = config:get();
+    cnf['follow'] = true;
+    if (player ~= GetPlayerEntity().Name) then
+      AshitaCore:GetChatManager():QueueCommand("/follow " .. config:get().leader, 1);
+    end
+    config:save();
+  end,
+
   stay = function(self)
     local cnf = config:get();
     if (cnf['stay'] == nil) then
@@ -160,6 +253,17 @@ return {
       cnf['stay'] = nil;
       AshitaCore:GetChatManager():QueueCommand("/sendkey numpad7 up", -1);
     end
+    config:save();
+  end,
+
+  escape = function(self)
+    local cnf = config:get();
+    cnf['escape'] = true;
+  end,
+  relax = function(self)
+    local cnf = config.get();
+    cnf['escape'] = false;
+    config:save();
   end,
 
   reload = function(self)

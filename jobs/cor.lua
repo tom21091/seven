@@ -11,30 +11,30 @@ local spells = packets.spells;
 local stoe = packets.stoe;
 local abilities = packets.abilities;
 
-local ability_levels = {};
-ability_levels[abilities.CORSAIRS_ROLL] = 5;
-ability_levels[abilities.NINJA_ROLL] = 8;
-ability_levels[abilities.HUNTERS_ROLL] = 11;
-ability_levels[abilities.CHAOS_ROLL] = 14;
-ability_levels[abilities.MAGUSS_ROLL] = 17;
-ability_levels[abilities.HEALERS_ROLL] = 20;
-ability_levels[abilities.DRACHEN_ROLL] = 23;
-ability_levels[abilities.CHORAL_ROLL] = 26;
-ability_levels[abilities.MONKS_ROLL] = 31;
-ability_levels[abilities.BEAST_ROLL] = 34;
-ability_levels[abilities.SAMURAI_ROLL] = 37;
-ability_levels[abilities.EVOKERS_ROLL] = 40;
-ability_levels[abilities.ROGUES_ROLL] = 43;
-ability_levels[abilities.WARLOCKS_ROLL] = 46;
-ability_levels[abilities.FIGHTERS_ROLL] = 49;
-ability_levels[abilities.PUPPET_ROLL] = 52;
-ability_levels[abilities.GALLANTS_ROLL] = 55;
-ability_levels[abilities.WIZARDS_ROLL] = 58;
-ability_levels[abilities.DANCERS_ROLL] = 61;
-ability_levels[abilities.SCHOLARS_ROLL] = 64;
+-- local ability_levels = {};
+-- ability_levels[abilities.CORSAIRS_ROLL] = 5;
+-- ability_levels[abilities.NINJA_ROLL] = 8;
+-- ability_levels[abilities.HUNTERS_ROLL] = 11;
+-- ability_levels[abilities.CHAOS_ROLL] = 14;
+-- ability_levels[abilities.MAGUSS_ROLL] = 17;
+-- ability_levels[abilities.HEALERS_ROLL] = 20;
+-- ability_levels[abilities.DRACHEN_ROLL] = 23;
+-- ability_levels[abilities.CHORAL_ROLL] = 26;
+-- ability_levels[abilities.MONKS_ROLL] = 31;
+-- ability_levels[abilities.BEAST_ROLL] = 34;
+-- ability_levels[abilities.SAMURAI_ROLL] = 37;
+-- ability_levels[abilities.EVOKERS_ROLL] = 40;
+-- ability_levels[abilities.ROGUES_ROLL] = 43;
+-- ability_levels[abilities.WARLOCKS_ROLL] = 46;
+-- ability_levels[abilities.FIGHTERS_ROLL] = 49;
+-- ability_levels[abilities.PUPPET_ROLL] = 52;
+-- ability_levels[abilities.GALLANTS_ROLL] = 55;
+-- ability_levels[abilities.WIZARDS_ROLL] = 58;
+-- ability_levels[abilities.DANCERS_ROLL] = 61;
+-- ability_levels[abilities.SCHOLARS_ROLL] = 64;
 
 local jcor = {
-  ability_levels = ability_levels
+  -- ability_levels = ability_levels
 };
 
 function jcor:tick()
@@ -45,74 +45,43 @@ function jcor:tick()
 
   local status = party:GetBuffs(0);
   if (status[packets.status.EFFECT_INVISIBLE]) then return end
-
-  -- CORSAIR ROLLS - TO BE FIXED TO RE-ROLL FOR DOUBLE UPS --
+ 
   local cnf = config:get();
   if (cnf.corsair.rollvar1 and not(status[stoe[cnf.corsair.rollvar1]])) then
-    if (buffs:IsAble(abilities[cnf.corsair.rollvar1], ability_levels)) then
+    if (buffs:IsAble(abilities[cnf.corsair.rollvar1]) and not buffs:AbilityOnCD('PHANTOM_ROLL')) then
       actions.busy = true;
+      print(cnf.corsair.roll1);
       actions:queue(actions:new()
-        :next(partial(ability, '"' .. cnf.corsair.roll1 .. '"', '<me>'))
-        :next(partial(wait, 7))
+        :next(partial(ability,  cnf.corsair.roll1, '<me>'))
+        :next(partial(wait, 2))
         :next(function(self) actions.busy = false; end));
       return;
     end
   end
-  if (cnf.corsair.rollvar2 and not(status[stoe[cnf.corsair.rollvar2]])) then
-    if (buffs:IsAble(abilities[cnf.corsair.rollvar2], ability_levels)) then
+  if (cnf.corsair.rollvar2 and not(status[stoe[cnf.corsair.rollvar2]] and not(status[packets.status.EFFECT_BUST]))) then
+    if (buffs:IsAble(abilities[cnf.corsair.rollvar2]) and not buffs:AbilityOnCD('PHANTOM_ROLL')) then
       actions.busy = true;
+      print(cnf.corsair.roll2);
       actions:queue(actions:new()
-        :next(partial(ability, '"' .. cnf.corsair.roll2 .. '"', '<me>'))
-        :next(partial(wait, 7))
+        :next(partial(ability, cnf.corsair.roll2 , '<me>'))
+        :next(partial(wait, 2))
         :next(function(self) actions.busy = false; end));
       return;
     end
   end
 
-  -- ATTACKING AND WEAPONSKILLING
-  local tp = AshitaCore:GetDataManager():GetParty():GetMemberCurrentTP(0);
-  local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();
-  if (cnf.ATTACK_TID and tid ~= cnf.ATTACK_TID) then
-    cnf.ATTACK_TID = nil;
-    AshitaCore:GetChatManager():QueueCommand("/follow " .. cnf.leader, 1);
-  elseif (cnf.ATTACK_TID and tid == cnf.ATTACK_TID and tp >= 1000) then
-    if (cnf.WeaponSkillID ~= nil ) then
-      if AshitaCore:GetDataManager():GetPlayer():HasWeaponSkill(tonumber(cnf.WeaponSkillID)) then
-        for k, v in pairs(packets.weaponskills) do
-          if (tonumber(cnf.WeaponSkillID) == tonumber(v)) then
-            AshitaCore:GetChatManager():QueueCommand('/ws "' .. string.gsub(k,"_"," ") .. '" <t>', 1);
-          end
-        end
-      end
-    end
-  elseif (cnf.ATTACK_TID) then
-    AshitaCore:GetChatManager():QueueCommand("/ra <t>", 1);
+  if (cnf.ATTACK_TID) then
+    actions.busy = true;
+      actions:queue(actions:new()
+      :next(partial(actions.pause, true))
+      :next(function(self) AshitaCore:GetChatManager():QueueCommand("/ra <t>", 1);end)
+      :next(partial(wait, 5))
+      :next(partial(actions.pause, false))
+      :next(function(self) actions.busy = false; end));
+    
   end
 
-  -- SUBJOBS
-  local sub = AshitaCore:GetDataManager():GetPlayer():GetSubJob();
-  -- IF SUBJOB IS DANCER, DO DANCER THINGS
-  if (sub == Jobs.Dancer and cnf.ATTACK_TID ~= nil) then
-    local status = party:GetBuffs(0);
-    if (tp >= 150 and buffs:IsAble(abilities.DRAIN_SAMBA, jdnc.ability_levels) and status[stoe.DRAIN_SAMBA] ~= true) then
-      actions.busy = true;
-      actions:queue(actions:new()
-        :next(partial(ability, '"Drain Samba"', '<me>'))
-        :next(partial(wait, 8))
-        :next(function(self) actions.busy = false; end));
-      return;
-    end
-  -- IF SUBJOB IS BARD, DO BARD THINGS
-  elseif (sub == Jobs.Bard and (cnf.bard.songvar1 and not(status[stoe[cnf.bard.songvar1]]))) then
-    if (buffs:CanCast(spells[cnf.bard.songvar1], jbrd.spell_levels, true)) then
-      actions.busy = true;
-      actions:queue(actions:new()
-        :next(partial(magic, '"' .. cnf.bard.song1 .. '"', '<me>'))
-        :next(partial(wait, 7))
-        :next(function(self) actions.busy = false; end));
-      return;
-    end
-  end
+  
 end
 
 function jcor:attack(tid)
@@ -125,6 +94,28 @@ function jcor:attack(tid)
       AshitaCore:GetChatManager():QueueCommand('/follow ' .. tid, 0);
     end)
     );
+end
+
+function jcor:roller(name, number)
+  local key = string.upper(string.gsub(string.gsub(name,' ','_'), "'",""));
+  
+  --Lucky roll, stop here
+  if(number==packets.luckyRolls[key])then print("Lucky Roll!"); return end
+  local status = party:GetBuffs(0);
+  --No more double up chance
+  if(not status[packets.status.EFFECT_DOUBLE_UP_CHANCE])then print("Double up over..."); return end
+  --Less than 6 or unlucky number, roll again
+
+  if(number<=6 or number==packets.unluckyRolls[key])then
+    print("Rerolling");
+    actions.busy = true;
+      actions:queue(actions:new()
+      :next(partial(wait, 2))
+      :next(partial(ability, 'Double-Up' , '<me>'))
+      :next(partial(wait, 1))
+      :next(function(self) actions.busy = false; end));
+  end
+
 end
 
 function jcor:corsair(corsair, command, roll)

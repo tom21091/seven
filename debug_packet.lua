@@ -37,8 +37,8 @@ local tout = {};
 
 return {
   inc = function(self, id, size, packet)
-    -- if (id ~= 0x0E) then
-    --   print('IN: ' .. packet:hex());
+    -- if (id ~= 0x4D) then
+    --   print('IN: ' .. tostring(packet));
     -- end
     if (tinc[id] ~= nil) then
       tinc[id](id, size, packet);

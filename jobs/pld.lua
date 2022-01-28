@@ -19,10 +19,10 @@ local stoe = packets.stoe;
 -- ability_levels[packets.abilities.SEKKANOKI] = 40;
 -- ability_levels[packets.abilities.KONZEN_ITTAI] = 65;
 
-local jsam = {
+local jpld = {
 };
 
-function jsam:tick()
+function jpld:tick()
   if (actions.busy) then return end
   if (party:GetBuffs(0)[packets.status.EFFECT_INVISIBLE]) then return end
   local cnf = config:get();
@@ -30,29 +30,29 @@ function jsam:tick()
   local tp = AshitaCore:GetDataManager():GetParty():GetMemberCurrentTP(0);
 
   local queueJobAbility = nil;
-  if(zones[AshitaCore:GetDataManager():GetParty():GetMemberZone(0)].hostile)then
-    if (buffs:IsAble(abilities.HASSO) and not(buffs:AbilityOnCD("Hasso")) and cnf.ATTACK_TID ~= nil) then
-      queueJobAbility = "Hasso";
-    elseif (not(buffs:AbilityOnCD("Meditate")) and buffs:IsAble(abilities.MEDITATE) and AshitaCore:GetDataManager():GetParty():GetMemberCurrentTP(0)<3000) then
-        queueJobAbility = 'Meditate';
-    elseif (not(buffs:AbilityOnCD("Third Eye")) and buffs:IsAble(abilities.THIRD_EYE) and cnf.ATTACK_TID ~= nil) then
-        queueJobAbility = 'Third Eye';
-    else
-        queueJobAbility = nil;
-    end
-  end
+--   if(zones[AshitaCore:GetDataManager():GetParty():GetMemberZone(0)].hostile)then
+--     if (buffs:IsAble(abilities.HASSO) and not(buffs:AbilityOnCD("Hasso")) and cnf.ATTACK_TID ~= nil) then
+--       queueJobAbility = "Hasso";
+--     elseif (not(buffs:AbilityOnCD("Meditate")) and buffs:IsAble(abilities.MEDITATE) and cnf.ATTACK_TID ~= nil) then
+--         queueJobAbility = 'Meditate';
+--     elseif (not(buffs:AbilityOnCD("Third Eye")) and buffs:IsAble(abilities.THIRD_EYE) and cnf.ATTACK_TID ~= nil) then
+--         queueJobAbility = 'Third Eye';
+--     else
+--         queueJobAbility = nil;
+--     end
+--   end
   if (queueJobAbility ~= nil) then
     print (queueJobAbility)
     actions.busy = true;
     actions:queue(actions:new()
       :next(partial(ability, queueJobAbility, '<me>'))
-      :next(partial(wait, 0.01))
+      :next(partial(wait, .01))
       :next(function(self) actions.busy = false; end));
     return true;
   end
 end
 
-function jsam:attack(tid)
+function jpld:attack(tid)
   actions:queue(actions:new()
     :next(function(self)
       AshitaCore:GetChatManager():QueueCommand('/attack ' .. tid, 0);
@@ -63,4 +63,4 @@ function jsam:attack(tid)
     end));
 end
 
-return jsam;
+return jpld;

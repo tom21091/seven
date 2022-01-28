@@ -5,7 +5,7 @@ local pgen = require('pgen');
 
 function talkToBook(tid, tidx, choice, auto)
   return actions:InteractNpc(tid, tidx)
-    :next(function(self) return 'wait', 4; end) -- wait 4 ticks
+    :next(function(self) return 'wait', 2; end) -- wait 2 seconds
     :next(function(self, stalled) -- kill the text menu from the book
       self.esc = true;
       AshitaCore:GetChatManager():QueueCommand('/sendkey escape down', -1);
@@ -108,7 +108,7 @@ return {
     -- end
 
     actions:queue(actions:new():next(function(self)
-      AshitaCore:GetChatManager():QueueCommand('/l2 done buffing.', 1);
+      AshitaCore:GetChatManager():QueueCommand('/p done buffing.', 1);
     end));
   end,
 
