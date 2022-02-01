@@ -23,6 +23,7 @@ local jpld = {
 };
 
 function jpld:tick()
+  if not(zones[AshitaCore:GetDataManager():GetParty():GetMemberZone(0)].hostile)then return end
   if (actions.busy) then return end
   if (party:GetBuffs(0)[packets.status.EFFECT_INVISIBLE]) then return end
   local cnf = config:get();

@@ -5,19 +5,23 @@ local packets = require('packets');
 local buffs = require('behaviors.buffs')
 local healing = require('behaviors.healing');
 local nukes = require('behaviors.nukes');
-
+local zones = require('zones');
 
 
 local jwhm = {};
 
 function jwhm:tick()
+  if not (zones[AshitaCore:GetDataManager():GetParty():GetMemberZone(0)].hostile)then return end
   local cnf = config:get();
   local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();
   local tp = AshitaCore:GetDataManager():GetParty():GetMemberCurrentTP(0);
 
   if (actions.busy) then return end
-  if (healing:Heal()) then return end -- first priority...
-  if (buffs:Cleanse()) then return end
+  if (cnf['AutoCast']~=true)then return end
+  if (cnf['AutoHeal']==true)then
+    if (healing:Heal()) then return end -- first priority...
+    if (buffs:Cleanse()) then return end
+  end
   if (buffs:SneakyTime()) then return end
   if (buffs:IdleBuffs()) then return end
 end

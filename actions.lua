@@ -96,7 +96,7 @@ local actions = {
       parts[1](action, true); -- action will be killed next tick
     elseif (action.stalled == true) then
       print('Action stalled, removed.');
-      AshitaCore:GetChatManager():QueueCommand('/l2 Action stalled, removed.', -1);
+      AshitaCore:GetChatManager():QueueCommand('/p Action stalled, removed.', -1);
       table.remove(queue, 1);
       self:tick();
     elseif (action.waiting == 'wait') then
@@ -182,7 +182,7 @@ local actions = {
         return true; -- replace the outgoing packet
       end)
       :next(function(self)
-        AshitaCore:GetChatManager():QueueCommand('/l2 done.', 1);
+        AshitaCore:GetChatManager():QueueCommand('/p done.', 1);
       end)
     );
   end,

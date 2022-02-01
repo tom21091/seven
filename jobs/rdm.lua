@@ -5,39 +5,30 @@ local packets = require('packets');
 local buffs = require('behaviors.buffs');
 local healing = require('behaviors.healing');
 local nukes = require('behaviors.nukes');
-
+local zones = require('zones');
 
 return {
 
   tick = function(self)
     --local cnf = config:get();
     --local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();
+    
     if (actions.busy) then return end
     if (party:GetBuffs(0)[packets.status.EFFECT_INVISIBLE]) then return end
     local cnf = config:get();
+
+    if(cnf.AutoCast~=true)then return end
     local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();
     local tp = AshitaCore:GetDataManager():GetParty():GetMemberCurrentTP(0);
-    -- Attempt to weaponskill when you have TP
-    -- if (cnf.ATTACK_TID and tid == cnf.ATTACK_TID and tp >= 1000) then
-    --   if (cnf.WeaponSkillID ~= nil ) then
-    --     if AshitaCore:GetDataManager():GetPlayer():HasWeaponSkill(tonumber(cnf.WeaponSkillID)) then
-    --       for k, v in pairs(packets.weaponskills) do
-    --         if (tonumber(cnf.WeaponSkillID) == tonumber(v)) then
-    --           weaponskill(string.gsub(string.gsub(k,"_"," "),"TACHI","TACHI:"), tid);
-    --         end
-    --       end
-    --     end
-    --   end
-    -- end
-    if(cnf.AutoCast==true)then
-      if ( cnf.ATTACK_TID == tid) then
-        if (nukes:Nuke(tid)) then return end
-      end
+    if ( cnf.ATTACK_TID == tid and cnf['AutoNuke']==true) then
+      if (nukes:Nuke(tid)) then return end
+    end
+    if (cnf['AutoHeal']==true)then
       if (healing:Heal()) then return end
       if (buffs:Cleanse()) then return end
-      if (buffs:SneakyTime()) then return end
-      if (buffs:IdleBuffs()) then return end
     end
+    if (buffs:SneakyTime()) then return end
+    if (buffs:IdleBuffs()) then return end
 
     
 

@@ -12,6 +12,7 @@ local combat = require('combat');
 local party = require('party');
 local pgen = require('pgen');
 local fov = require('fov');
+local gui = require('gui');
 
 local jcor = require('jobs.cor');
 
@@ -78,6 +79,7 @@ local last = 0;
 ashita.register_event('render', function()
   local clock = os.clock;
   local t0 = clock();
+  gui:main();
   if (t0 - last > 0.5) then -- Every half second?
     last = t0;
     local cnf = config:get();
@@ -220,12 +222,41 @@ ashita.register_event('command', function(cmd, nType)
         end));
     end
   elseif (args[2] == 'autocast') then
-    if(args[4] ~= nil) then
-    AshitaCore:GetChatManager():QueueCommand('/l2 autocast ' .. args[3] .." ".. args[4], 1);
-    else 
-      print("Enter name and value");
+    if(args[3] ~= nil) then
+      if(args[4] == nil) then
+        AshitaCore:GetChatManager():QueueCommand('/l2 autocast ' .. args[3], 1);
+      else
+        AshitaCore:GetChatManager():QueueCommand('/l2 autocast '  .. args[3] .." ".. args[4], 1);
+      end
+    else
+      print('ERROR: Invalid entry for the "/seven autocast" command');
+      print('SYNTAX: /seven autocast <on/off> <player>*optional*');
+      print('This will turn on or off autocast for the player or all players');
     end
-
+  elseif(args[2] == 'autonuke')then
+    if(args[3] ~= nil) then
+      if(args[4] == nil) then
+        AshitaCore:GetChatManager():QueueCommand('/l2 autonuke ' .. args[3], 1);
+      else
+        AshitaCore:GetChatManager():QueueCommand('/l2 autonuke '  .. args[3] .." ".. args[4], 1);
+      end
+    else
+      print('ERROR: Invalid entry for the "/seven autonuke" command');
+      print('SYNTAX: /seven autonuke <on/off> <player>*optional*');
+      print('This will turn on or off autonuke for the player or all players');
+    end
+  elseif(args[2] == 'autoheal')then
+    if(args[3] ~= nil) then
+      if(args[4] == nil) then
+        AshitaCore:GetChatManager():QueueCommand('/l2 autoheal ' .. args[3], 1);
+      else
+        AshitaCore:GetChatManager():QueueCommand('/l2 autoheal '  .. args[3] .." ".. args[4], 1);
+      end
+    else
+      print('ERROR: Invalid entry for the "/seven autoheal" command');
+      print('SYNTAX: /seven autoheal <on/off> <player>*optional*');
+      print('This will turn on or off autoheal for the player or all players');
+    end
   elseif (args[2] == 'autows') then
     if(args[3] ~= nil) then
       if(args[4] == nil) then
@@ -244,10 +275,10 @@ ashita.register_event('command', function(cmd, nType)
     if(args[3] ~= nil) then
       if(args[4] == nil) then
         AshitaCore:GetChatManager():QueueCommand('/l2 autopos ' .. args[3], 1);
-        commands:SetAutoWS(nil, args[3]);
+        commands:SetAutoPosition(nil, args[3]);
       else
         AshitaCore:GetChatManager():QueueCommand('/l2 autopos '  .. args[3] .." ".. args[4], 1);
-        commands:SetAutoWS(args[3], args[4]);
+        commands:SetAutoPosition(args[3], args[4]);
       end
     else
       print('ERROR: Invalid entry for the "/seven autopos" command');
@@ -361,10 +392,19 @@ ashita.register_event('command', function(cmd, nType)
 end);
 
 
+----------------------------------------------------------------------------------------------------
+-- func: load
+-- desc: Called when the addon is loaded.
+----------------------------------------------------------------------------------------------------
+ashita.register_event('load', function()
+  gui:load();
+end);
+
 ---------------------------------------------------------------------------------------------------
 -- func: unload
 -- desc: Called when our addon is unloaded.
 ---------------------------------------------------------------------------------------------------
 ashita.register_event('unload', function()
   config:save();
+  gui:unload();
 end);

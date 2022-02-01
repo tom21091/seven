@@ -3,6 +3,7 @@ local actions = require('actions');
 local magic = require('magic');
 local actions = require('actions');
 local packets = require('packets');
+local config = require('config');
 
 return {
 
@@ -34,17 +35,30 @@ return {
     local waits = {2, 2.25, 2.5, 2.5, 2.5};
     local waitsga = {4.5, 4.75, 5};
     local iparty = AshitaCore:GetDataManager():GetParty();
-    local idxs = self:NeedHeals(60);
+    local cnf = config:get();
+    local idxs;
+    if (cnf['HealThreshold'])then
+      idxs = self:NeedHeals(cnf['HealThreshold']);
+    else
+      idxs = self:NeedHeals(60);
+    end
+    local dist = 1000;
     if (#idxs > 0 and #idxs <=2) then
       local target = idxs[1];
       if (target == 0) then
         target = '<me>'
       else
+        if (GetEntity(iparty:GetMemberTargetIndex(target)) ~= nil)then
+          dist = math.sqrt(GetEntity(iparty:GetMemberTargetIndex(target)).Distance);
+        end
         target = iparty:GetMemberServerId(target);
+        
+        
+        
       end
       local spell, waitindex, spellkey = magic:highest("Cure", false);
       if (spell==nil)then return false end;
-      if(ashita.ffxi.recast.get_spell_recast_by_index(packets.spells[spellkey])~=0 or AshitaCore:GetDataManager():GetParty():GetMemberCurrentMP(0) < packets.mpcost[spellkey])then return false end;
+      if(ashita.ffxi.recast.get_spell_recast_by_index(packets.spells[spellkey])~=0 or AshitaCore:GetDataManager():GetParty():GetMemberCurrentMP(0) < packets.mpcost[spellkey] or dist > 20)then return false end;
       actions.busy = true;
       actions:queue(actions:new()
         :next(partial(actions.pause, true))

@@ -4,7 +4,7 @@ local actions = require('actions');
 local packets = require('packets');
 local buffs = require('behaviors.buffs')
 local healing = require('behaviors.healing');
-local jdnc = require('jobs.dnc');
+local zones = require('zones');
 
 local spells = packets.spells;
 local status = packets.status;
@@ -14,6 +14,7 @@ local stoe = packets.stoe;
 return {
 
   tick = function(self)
+    if not (zones[AshitaCore:GetDataManager():GetParty():GetMemberZone(0)].hostile)then return end
     if (actions.busy) then return end
     local cnf = config:get();
     local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();

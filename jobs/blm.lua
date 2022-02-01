@@ -5,17 +5,18 @@ local buffs = require('behaviors.buffs');
 local nukes = require('behaviors.nukes');
 local magic = require('magic');
 local party = require('party');
-
+local zones = require('zones');
 
 return {
 
   tick = function(self)
-    local cnf = config:get();
-    local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();
     if (actions.busy) then return end
     if (party:GetBuffs(0)[packets.status.EFFECT_INVISIBLE]) then return end
-
-    if(cnf.AutoCast==true and cnf.ATTACK_TID == tid)then
+    if (not zones[AshitaCore:GetDataManager():GetParty():GetMemberZone(0)].hostile)then return end
+    local cnf = config:get();
+    if(cnf.AutoCast~=true)then return end 
+    local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();
+    if(cnf.ATTACK_TID == tid and cnf['AutoNuke']==true)then
       nukes:Nuke(tid);
     end
 

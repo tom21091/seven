@@ -23,23 +23,24 @@ local jsam = {
 };
 
 function jsam:tick()
+  if not (zones[AshitaCore:GetDataManager():GetParty():GetMemberZone(0)].hostile)then return end
   if (actions.busy) then return end
   if (party:GetBuffs(0)[packets.status.EFFECT_INVISIBLE]) then return end
+  if (party:GetBuffs(0)[packets.status.EFFECT_MOUNTED]) then return end
   local cnf = config:get();
   local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();
   local tp = AshitaCore:GetDataManager():GetParty():GetMemberCurrentTP(0);
 
   local queueJobAbility = nil;
-  if(zones[AshitaCore:GetDataManager():GetParty():GetMemberZone(0)].hostile)then
-    if (buffs:IsAble(abilities.HASSO) and not(buffs:AbilityOnCD("Hasso")) and cnf.ATTACK_TID ~= nil) then
-      queueJobAbility = "Hasso";
-    elseif (not(buffs:AbilityOnCD("Meditate")) and buffs:IsAble(abilities.MEDITATE) and AshitaCore:GetDataManager():GetParty():GetMemberCurrentTP(0)<3000) then
-        queueJobAbility = 'Meditate';
-    elseif (not(buffs:AbilityOnCD("Third Eye")) and buffs:IsAble(abilities.THIRD_EYE) and cnf.ATTACK_TID ~= nil) then
-        queueJobAbility = 'Third Eye';
-    else
-        queueJobAbility = nil;
-    end
+  
+  if (buffs:IsAble(abilities.HASSO) and not(buffs:AbilityOnCD("Hasso")) and cnf.ATTACK_TID ~= nil) then
+    queueJobAbility = "Hasso";
+  elseif (not(buffs:AbilityOnCD("Meditate")) and buffs:IsAble(abilities.MEDITATE) and AshitaCore:GetDataManager():GetParty():GetMemberCurrentTP(0)<3000) then
+      queueJobAbility = 'Meditate';
+  elseif (not(buffs:AbilityOnCD("Third Eye")) and buffs:IsAble(abilities.THIRD_EYE) and cnf.ATTACK_TID ~= nil) then
+      queueJobAbility = 'Third Eye';
+  else
+      queueJobAbility = nil;
   end
   if (queueJobAbility ~= nil) then
     print (queueJobAbility)

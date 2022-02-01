@@ -64,6 +64,24 @@ local jsmn = {
   spell_levels = spell_levels,
 };
 
+function jsmn:getBestElemental()
+  local Element
+  local date = ashita.ffxi.vanatime.get_current_date();
+  local dayelement;
+  dayelement =  string.match(weekdaynames[date.weekday+1], "(.*)(sday)")
+  if (dayelement == nil)then
+    dayelement = string.match(weekdaynames[date.weekday+1], "(.*)(day)")
+  end
+  dayelement = string.gsub(string.gsub(dayelement,"Lightning","Thunder"),"Wind", "Air");
+  local weather = ashita.ffxi.weather.get_weather()
+  if (weather > 3 and (string.match(weathertype[weather+1], "2") or weakto[date.weekday+1]~=weathertype[weather+1]))then -- If Strong weather, or if weather is not weak against the day
+    Element = string.gsub(weathertype[weather+1],"2","");
+  else
+    Element = dayelement
+  end
+  return Element
+end
+
 function jsmn:siphon()
   --THIS ASSUMES YOU HAVE ALL SPIRITS LEARNED
   local playerEntity = GetPlayerEntity();
@@ -93,21 +111,7 @@ function jsmn:siphon()
     end
   end
   if (siphonElement == nil)then -- We don't have an elemental summoned
-
-    local date = ashita.ffxi.vanatime.get_current_date();
-    local dayelement;
-    dayelement =  string.match(weekdaynames[date.weekday+1], "(.*)(sday)")
-    if (dayelement == nil)then
-      dayelement = string.match(weekdaynames[date.weekday+1], "(.*)(day)")
-    end
-    dayelement = string.gsub(string.gsub(dayelement,"Lightning","Thunder"),"Wind", "Air");
-    local weather = ashita.ffxi.weather.get_weather()
-    if (weather > 3 and (string.match(weathertype[weather+1], "2") or weakto[date.weekday+1]~=weathertype[weather+1]))then -- If Strong weather, or if weather is not weak against the day
-      siphonElement = string.gsub(weathertype[weather+1],"2","");
-      return
-    else
-      siphonElement = dayelement
-    end
+    siphonElement = self:getBestElemental()
   end
 
   if (not spirit)then -- No pet
@@ -122,7 +126,11 @@ function jsmn:siphon()
   command
   :next(function(self)print("Suck em up"); end)
   :next(function(self)
-    AshitaCore:GetChatManager():QueueCommand('/ja "Elemental Siphon" <me>', -1);
+    if (GetPlayerEntity().PetTargetIndex ~=0)then
+      AshitaCore:GetChatManager():QueueCommand('/ja "Elemental Siphon" <me>', -1);
+    else
+      print("No pet summoned, skipping Elemental Siphon");
+    end
   end)
 
   if (not spirit) then -- If we summoned the spirit, release it
@@ -153,19 +161,21 @@ function jsmn:tick()
   if (actions.busy) then return end
   if (party:GetBuffs(0)[packets.status.EFFECT_INVISIBLE]) then return end
   if (not zones[AshitaCore:GetDataManager():GetParty():GetMemberZone(0)].hostile)then return end
-  local player = AshitaCore:GetDataManager():GetPlayer();
   local cnf = config:get();
+  if (cnf['AutoCast'] ~= true) then return end
+
+  local player = AshitaCore:GetDataManager():GetPlayer();
   local smn = cnf['summoner'];
   local manapercent = AshitaCore:GetDataManager():GetParty():GetMemberCurrentMPP(0);
   local playerEntity = GetPlayerEntity();
 
-  if (manapercent < 70 and buffs:IsAble(abilities.ELEMENTAL_SIPHON) and not buffs:AbilityOnCD("Elemental Siphon") and cnf['AutoCast']==true)then
+  if (manapercent < 70 and buffs:IsAble(abilities.ELEMENTAL_SIPHON) and not buffs:AbilityOnCD("Elemental Siphon"))then
     return self:siphon();
   end
-  if (playerEntity.PetTargetIndex == 0 and cnf['AutoCast']==true) then
+  if (playerEntity.PetTargetIndex == 0 and cnf['AutoSummon']) then
     actions.busy = true;
     actions:queue(actions:new()
-      :next(partial(magic.cast, magic, cnf['summon'], '<me>'))
+      :next(partial(magic.cast, magic, smn['summon'], '<me>'))
       :next(partial(wait, 7))
       :next(function(self) actions.busy = false; end));
   else
@@ -197,6 +207,10 @@ function jsmn:tick()
       return;
     end
   end
+
+end
+
+function jsmn:autopact()
 
 end
 

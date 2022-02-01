@@ -5,16 +5,18 @@ local buffs = require('behaviors.buffs');
 local nukes = require('behaviors.nukes');
 local magic = require('magic');
 local levels = require('levels');
-
+local zones = require('zones');
 
 
 return {
 
   tick = function(self)
-    local cnf = config:get();
-    local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();
+    if not(zones[AshitaCore:GetDataManager():GetParty():GetMemberZone(0)].hostile)then return end
     if (actions.busy) then return end
     if (party:GetBuffs(0)[packets.status.EFFECT_INVISIBLE]) then return end
+    local cnf = config:get();
+    local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();
+    
 
 
   end,

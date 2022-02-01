@@ -94,7 +94,6 @@ local subjob = {};
     elseif (sub == Jobs.Corsair and cnf.corsair.rollvar1 and not(status[packets.stoe[cnf.corsair.rollvar1]])) then
       if (buffs:IsAble(packets.abilities[cnf.corsair.rollvar1]) and not buffs:AbilityOnCD('PHANTOM_ROLL')) then
         actions.busy = true;
-        print(cnf.corsair.roll1);
         actions:queue(actions:new()
           :next(partial(ability,  cnf.corsair.roll1, '<me>'))
           :next(partial(wait, 2))

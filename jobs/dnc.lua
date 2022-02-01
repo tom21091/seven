@@ -4,6 +4,7 @@ local actions = require('actions');
 local packets = require('packets');
 local buffs = require('behaviors.buffs')
 local healing = require('behaviors.healing');
+local zones = require('zones');
 
 local spells = packets.spells;
 local status = packets.status;
@@ -17,6 +18,7 @@ return {
   ability_levels = ability_levels,
 
   tick = function(self)
+    if (not zones[AshitaCore:GetDataManager():GetParty():GetMemberZone(0)].hostile)then return end
     if (actions.busy) then return end
     if (party:GetBuffs(0)[packets.status.EFFECT_INVISIBLE]) then return end
     if (healing:DNCHeal(spell_levels)) then return end

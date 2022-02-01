@@ -97,7 +97,7 @@ return {
 
   attack = function(self, tid)
     local main = AshitaCore:GetDataManager():GetPlayer():GetMainJob();
-
+    local sub = AshitaCore:GetDataManager():GetPlayer():GetSubJob();
     for jobid, job in pairs(map) do
       if (main == jobid and job.attack) then
         return job:attack(tid);
@@ -229,16 +229,16 @@ return {
   end,
 
   tick = function(self)
-    if (config:get() == nil) then return end
+    local cnf = config:get();
+    if (cnf == nil) then return end
     local status = party:GetBuffs(0);
     if (status[packets.status.EFFECT_INVISIBLE]) then return end
-    local cnf = config:get();
+    
     local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();
     local main = AshitaCore:GetDataManager():GetPlayer():GetMainJob();
     local tp = AshitaCore:GetDataManager():GetParty():GetMemberCurrentTP(0);
     local mytid = GetPlayerEntity().ServerId;
     if(cnf['escape']==true)then-- running away, don't stop
-      print('.');
       return
     end
     if(actions.busy==true)then return end
@@ -304,6 +304,5 @@ return {
       cnf['stay'] = nil;
       AshitaCore:GetChatManager():QueueCommand("/sendkey numpad7 up", -1);
     end
-    config:save();
   end
 };

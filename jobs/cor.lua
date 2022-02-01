@@ -6,6 +6,7 @@ local buffs = require('behaviors.buffs')
 local healing = require('behaviors.healing');
 local jdnc = require('jobs.dnc');
 local jbrd = require('jobs.brd');
+local zones = require('zones');
 
 local spells = packets.spells;
 local stoe = packets.stoe;
@@ -36,9 +37,10 @@ local abilities = packets.abilities;
 local jcor = {
   -- ability_levels = ability_levels
 };
-
+--TODO: Make Corsair distance aware
 function jcor:tick()
   if (actions.busy) then return end
+  if (not zones[AshitaCore:GetDataManager():GetParty():GetMemberZone(0)].hostile)then return end
   local cnf = config:get();
   local cor = cnf['corsair'];
   if (not(cor['roll'])) then return end
@@ -50,7 +52,6 @@ function jcor:tick()
   if (cnf.corsair.rollvar1 and not(status[stoe[cnf.corsair.rollvar1]])) then
     if (buffs:IsAble(abilities[cnf.corsair.rollvar1]) and not buffs:AbilityOnCD('PHANTOM_ROLL')) then
       actions.busy = true;
-      print(cnf.corsair.roll1);
       actions:queue(actions:new()
         :next(partial(ability,  cnf.corsair.roll1, '<me>'))
         :next(partial(wait, 2))
@@ -61,7 +62,6 @@ function jcor:tick()
   if (cnf.corsair.rollvar2 and not(status[stoe[cnf.corsair.rollvar2]] and not(status[packets.status.EFFECT_BUST]))) then
     if (buffs:IsAble(abilities[cnf.corsair.rollvar2]) and not buffs:AbilityOnCD('PHANTOM_ROLL')) then
       actions.busy = true;
-      print(cnf.corsair.roll2);
       actions:queue(actions:new()
         :next(partial(ability, cnf.corsair.roll2 , '<me>'))
         :next(partial(wait, 2))

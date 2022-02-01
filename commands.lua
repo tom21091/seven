@@ -95,7 +95,17 @@ return {
     elseif (args[1] == 'talk') then
       actions:queue(actions:InteractNpc(args[2], args[3]));
     elseif (args[1] == 'autocast') then
-      self:SetAutoCast(args[2],args[3]);
+      if (string.lower(args[2]) == 'on' or string.lower(args[2]) == 'off') then
+        self:SetAutoCast(nil,args[2]);
+      else
+        self:SetAutoCast(args[2],args[3]);
+      end
+    elseif (args[1] == 'autonuke') then
+      if (string.lower(args[2]) == 'on' or string.lower(args[2]) == 'off') then
+        self:SetAutoNuke(nil,args[2]);
+      else
+        self:SetAutoNuke(args[2],args[3]);
+      end
     elseif (args[1] == 'autopos') then
       if (string.lower(args[2]) == 'on' or string.lower(args[2]) == 'off') then
         self:SetAutoPosition(nil, args[2]);
@@ -119,7 +129,7 @@ return {
     elseif (args[1] == 'setsmn') then
       if (args[2] == GetPlayerEntity().Name and args[3] ~= nil) then
         local cnf = config:get();
-        cnf['summon'] = args[3];
+        cnf['summoner']['summon'] = args[3];
         print ("Set Summon to ".. args[3]);
       end
     config:save();
@@ -142,7 +152,10 @@ return {
   end,
 
   SetAutoCast = function(self, name, value)
-    if(string.lower(name) ~= string.lower(GetPlayerEntity().Name))then return end
+    value = string.lower(value);
+    if (name ~= nil)then
+      if(string.lower(name) ~= string.lower(GetPlayerEntity().Name))then return end
+    end
     local cnf = config:get();
     cnf['AutoCast'] = value == 'true' or value == 'on';
     if(cnf['AutoCast'])then print("Autocast ON");
