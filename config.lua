@@ -25,13 +25,36 @@ function load_settings(player)
   configs['all'] = tableMerge(configs['all'],f);
   if (configs['all'][player] == nil)then
     configs['all'][player]={
+      AutoCast = false,
+      AutoHeal = false,
+      AutoNuke = false,
+      AutoPosition = false,
+      AutoWS = false,
+      HealThreshold = 50,
+      IdleBuffs = false,
+      SneakyTime = false,
       WeaponSkill = "",
       leader = "",
       tank = "",
       bard = {},
-      corsair = {},
-      Summoner = {},
-      geomancer = {}
+      corsair = {
+        roll = false,
+        roll1 = "",
+        roll2 = "",
+        rollvar1 = "",
+        rollvar2 = ""
+      },
+      Summoner = {
+        AutoPact = false,
+        AutoRelease = false,
+        AutoSummon = false,
+        BPRage = {},
+        BPWard = {},
+        Summon = ""
+      },
+      geomancer = {},
+      escape = false,
+      follow = false
     }
     configs:save();
     print("New Character '"..player.. "' added to settings")

@@ -21,6 +21,7 @@ local variables = {
     ['AutoSummon']              = { {}, ImGuiVar_BOOLCPP },
     ['SummonCombo']                  = { {}, ImGuiVar_INT32, -1 },
     ['AutoPact']              = { {}, ImGuiVar_BOOLCPP },
+    ['AutoRelease']              = { {}, ImGuiVar_BOOLCPP },
 
     ['BPRageSelectable1']                 = { {}, ImGuiVar_BOOLCPP},
     ['BPRageSelectable2']                 = { {}, ImGuiVar_BOOLCPP},
@@ -41,7 +42,7 @@ local rolls = {
 }
 local summons = {
     "Carbuncle", "Fenrir", "Diabolos", "Ifrit", "Titan", "Leviathan", "Garuda", "Shiva", "Ramuh", "Odin", "Alexander", "Cait Sith",
-    "Light Spirit", "Dark Spirit", "Fire Spirit", "Earth Spirit", "Water Spirit", "Air Spirit", "Ice Spirit", "Thunder Spirit"
+    "Light Spirit", "Dark Spirit", "Fire Spirit", "Earth Spirit", "Water Spirit", "Air Spirit", "Ice Spirit", "Thunder Spirit", "Auto Spirit"
 }
 local BPRage = {
     Carbuncle = {"Poison Nails", "Meteorite"},
@@ -126,11 +127,14 @@ function gui:loadConfig()
         imgui.SetVarValue(variables['Tank'][1][player],"");
         imgui.SetVarValue(variables['Tank'][1][player],cnf['tank']);
         imgui.SetVarValue(variables['AutoRoll'][1][player],cnf['corsair']['roll']);
-        -- for k ,v in pairs(summons) do
-        --     if (cnf['Summoner']['summon'] == v)then
-        --         imgui.SetVarValue(variables['SummonCombo'][1][player],k-1);
-        --     end
-        -- end
+        imgui.SetVarValue(variables['AutoSummon'][1][player],cnf['Summoner']['AutoSummon']);
+        imgui.SetVarValue(variables['AutoPact'][1][player],cnf['Summoner']['AutoPact']);
+        imgui.SetVarValue(variables['AutoRelease'][1][player],cnf['Summoner']['AutoRelease']);
+        for k ,v in pairs(summons) do
+            if (cnf['Summoner']['Summon'] == v)then
+                imgui.SetVarValue(variables['SummonCombo'][1][player],k-1);
+            end
+        end
         for k ,v in pairs(rolls) do
             if (cnf['corsair']['roll1'] == v)then
                 imgui.SetVarValue(variables['RollCombo1'][1][player],k-1);
@@ -216,18 +220,27 @@ function gui:showMenu(player)
             end
         end
         if (imgui.CollapsingHeader('Summoner Settings')) then
+            imgui.Columns(2, nil, false);
             if(imgui.Checkbox("AutoSummon", variables['AutoSummon'][1][player]))then
-                self.all[player]['AutoSummon'] = imgui.GetVarValue(variables['AutoSummon'][1][player]);
+                self.all[player]['Summoner']['AutoSummon'] = imgui.GetVarValue(variables['AutoSummon'][1][player]);
                 config:save();
             end
-            if (imgui.Combo("Summon",variables['SummonCombo'][1][player],"Carbuncle\0Fenrir\0Diabolos\0Ifrit\0Titan\0Leviathan\0Garuda\0Shiva\0Ramuh\0Odin\0Alexander\0Cait Sith\0Light Spirit\0Dark Spirit\0Fire Spirit\0Earth Spirit\0Water Spirit\0Air Spirit\0Ice Spirit\0Thunder Spirit\0\0"))then
-                self.all[player]['Summoner']['summon'] = summons[imgui.GetVarValue(variables['SummonCombo'][1][player])+1]
+            imgui.NextColumn();
+            if (imgui.Combo("Summon",variables['SummonCombo'][1][player],"Carbuncle\0Fenrir\0Diabolos\0Ifrit\0Titan\0Leviathan\0Garuda\0Shiva\0Ramuh\0Odin\0Alexander\0Cait Sith\0Light Spirit\0Dark Spirit\0Fire Spirit\0Earth Spirit\0Water Spirit\0Air Spirit\0Ice Spirit\0Thunder Spirit\0Auto Spirit\0\0"))then
+                self.all[player]['Summoner']['Summon'] = summons[imgui.GetVarValue(variables['SummonCombo'][1][player])+1]
                 config:save();
             end
+            imgui.NextColumn();
             if(imgui.Checkbox("AutoPact", variables['AutoPact'][1][player]))then
                 self.all[player]['Summoner']['AutoPact'] = imgui.GetVarValue(variables['AutoPact'][1][player]);
                 config:save();
             end
+            imgui.NextColumn();
+            if(imgui.Checkbox("AutoRelease", variables['AutoRelease'][1][player]))then
+                self.all[player]['Summoner']['AutoRelease'] = imgui.GetVarValue(variables['AutoRelease'][1][player]);
+                config:save();
+            end
+            imgui.Columns(1);
             imgui.Text("Current: ")
             imgui.Columns(2, nil, false);
 

@@ -119,10 +119,12 @@ function jsmn:siphon()
   if (not spirit)then -- No pet
     command
     :next(function(self)print("Summon " .. siphonElement .. " Spirit"); end)
+    :next(partial(actions.pause, true))
     :next(function(self)
       AshitaCore:GetChatManager():QueueCommand('/ma "'.. siphonElement ..' Spirit" <me>', -1);
     end)
     :next(partial(wait,2));
+    command:next(partial(actions.pause, false))
   end
   
   command
@@ -147,9 +149,12 @@ function jsmn:siphon()
     command
     :next(partial(wait,1))
     :next(function(self)print("Resummoning "..avatar); end)
+    :next(partial(actions.pause, true))
     :next(function(self)
       AshitaCore:GetChatManager():QueueCommand('/ma "'..avatar..'" <me>', -1);
     end)
+    :next(partial(wait,7))
+    command:next(partial(actions.pause, false))
   end
 
   command:next(function(self) actions.busy = false; end);
@@ -188,17 +193,42 @@ function jsmn:tick()
   end
   if (playerEntity.PetTargetIndex == 0)then
     PETTID = nil
-    if(cnf['AutoSummon']) then
+    if(smn['AutoSummon'] and ATTACK_TID ~= nil) then
+      local bestelement = self:getBestElemental()
+      local command = actions:new()
+      local spirit
+      _, spirit = string.match(smn["Summon"], "(.*)(Spirit)")
+      command:next(partial(actions.pause, true))
+      if(spirit)then
+        if(smn['Summon']=="Auto Spirit")then
+          command:next(partial(magic.cast, magic, bestelement.." Spirit", '<me>'))
+        else
+          command:next(partial(magic.cast, magic, smn["Summon"], '<me>'))
+        end
+          command:next(partial(wait, 2))
+      else
+          command:next(partial(magic.cast, magic, smn["Summon"], '<me>'))
+          command:next(partial(wait, 7))
+      end
+      command:next(partial(actions.pause, false))
+      command:next(function(self) actions.busy = false; end)
       actions.busy = true;
-      actions:queue(actions:new()
-        :next(partial(magic.cast, magic, self:getBestElemental().." Spirit", '<me>'))
-        :next(partial(wait, 2))
-        :next(function(self) actions.busy = false; end));
+      actions:queue(command);
+      return true
     end
   else
     local pet = GetEntity(playerEntity.PetTargetIndex);
     PETTID = pet.ServerId;
-    if (pettarget ~= ATTACK_TID and ATTACK_TID ~= nil and not buffs:AbilityOnCD("Assault"))then -- Pet is not attacking the target
+    if (ATTACK_TID == nil)then
+      if(smn.AutoRelease)then
+        actions.busy = true;
+        actions:queue(actions:new()
+        :next(function(self)
+          AshitaCore:GetChatManager():QueueCommand('/pet "Release" <me>', -1);
+        end)
+        :next(function(self) actions.busy = false; end));
+      end
+    elseif (pettarget ~= ATTACK_TID and not buffs:AbilityOnCD("Assault"))then -- Pet is not attacking the target
       actions.busy = true;
       actions:queue(actions:new()
       :next(function(self)
@@ -259,7 +289,14 @@ function jsmn:pact(avatar, ability)
       AshitaCore:GetChatManager():QueueCommand('/pet "'..ability..'"', -1);
     end
   end)
-  :next(partial(wait, 1))
+  :next(partial(wait, 3))
+  local smn = config:get()["Summoner"]
+  if(smn.AutoRelease)then
+    command:next(function(self)
+      AshitaCore:GetChatManager():QueueCommand('/pet "Release" <me>', -1);
+    end)
+  end
+  command
   :next(function(self) actions.busy = false; end);
 
   actions.busy = true;
