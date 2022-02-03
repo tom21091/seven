@@ -23,14 +23,22 @@ return {
     local actor = struct.unpack('s', packet, 0x8+1);
     local msg = struct.unpack('s', packet, 0x18);
     local args = msg:args();
+    args[1]=args[1]:lower();
     if (args[1] == 'leader') then
       actions:leader(actor);
 	    AshitaCore:GetChatManager():QueueCommand("/l2 Leader set to ".. actor, 1);
     elseif(args[1] == 'tank')then
       actions:tank(args[2]);
       AshitaCore:GetChatManager():QueueCommand("/l2 Tank set to ".. args[2], 1);
-	elseif (args[1] == 'searchws') then
-	  self:SearchWeaponSkill(args[2])
+	  elseif (args[1] == 'searchws') then
+	    self:SearchWeaponSkill(args[2])
+    elseif(args[1] == 'pact')then
+      if(args[4] == nil)then
+        print("Error: Pact requires player name, avatar name, and pact name")
+        print('SYNTAX: /seven pact tommywommy carbuncle "poison nails"');
+      elseif (args[2]:lower() == GetPlayerEntity().Name:lower())then
+        jsmn:pact(args[3], args[4]);
+      end
     end
 
     -- If we're the leader...  then don't listen.
@@ -129,7 +137,7 @@ return {
     elseif (args[1] == 'setsmn') then
       if (args[2] == GetPlayerEntity().Name and args[3] ~= nil) then
         local cnf = config:get();
-        cnf['summoner']['summon'] = args[3];
+        cnf['Summoner']['summon'] = args[3];
         print ("Set Summon to ".. args[3]);
       end
     config:save();

@@ -23,7 +23,7 @@ return {
     local playerEntity = GetPlayerEntity();
     
     if (playerEntity.PetTargetIndex == 0) then
-      if (not(buffs:AbilityOnCD("Call Wyvern")) and buffs:IsAble(abilities.CALL_WYVERN) and cnf.ATTACK_TID ~= nil) then
+      if (not(buffs:AbilityOnCD("Call Wyvern")) and buffs:IsAble(abilities.CALL_WYVERN) and ATTACK_TID ~= nil) then
         queueJobAbility = 'Call Wyvern';
         queueTarget = '<me>';
       end
@@ -40,13 +40,13 @@ return {
 
     end
 
-    if (not(buffs:AbilityOnCD("Jump"))and buffs:IsAble(abilities.JUMP) and cnf.ATTACK_TID ~= nil) then
+    if (not(buffs:AbilityOnCD("Jump"))and buffs:IsAble(abilities.JUMP) and ATTACK_TID ~= nil) then
       queueJobAbility = 'Jump';
       queueTarget = '<t>';
-    elseif (not(buffs:AbilityOnCD("High Jump"))and buffs:IsAble(abilities.HIGH_JUMP) and cnf.ATTACK_TID ~= nil) then
+    elseif (not(buffs:AbilityOnCD("High Jump"))and buffs:IsAble(abilities.HIGH_JUMP) and ATTACK_TID ~= nil) then
       queueJobAbility = 'High Jump';
       queueTarget = '<t>';
-    -- elseif (not(buffs:AbilityOnCD("Super Jump"))and buffs:IsAble(abilities.SUPER_JUMP) and cnf.ATTACK_TID ~= nil) then
+    -- elseif (not(buffs:AbilityOnCD("Super Jump"))and buffs:IsAble(abilities.SUPER_JUMP) and ATTACK_TID ~= nil) then
     --   queueJobAbility = 'Super Jump';
     --   queueTarget = '<t>';
     end
@@ -68,7 +68,7 @@ return {
         AshitaCore:GetChatManager():QueueCommand('/attack ' .. tid, 0);
       end)
       :next(function(self)
-        config:get().ATTACK_TID = tid;
+        ATTACK_TID = tid;
         AshitaCore:GetChatManager():QueueCommand('/follow ' .. tid, 0);
       end));
   end

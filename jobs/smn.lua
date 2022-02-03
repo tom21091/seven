@@ -10,6 +10,7 @@ require('ffxi.vanatime');
 require('ffxi.weather');
 
 local abilities = packets.abilities;
+local mpcost = packets.mpcost;
 
 --Some enums borrowed from https://github.com/Kinematics/GearSwap-Jobs/blob/master/SMN.lua
 local pacts = {}
@@ -97,18 +98,19 @@ function jsmn:siphon()
   if (playerEntity.PetTargetIndex ~= 0)then -- Have pet  
     pet = GetEntity(playerEntity.PetTargetIndex);
     element, spirit = string.match(pet.Name, "(.*)(Spirit)")
-    if (element ~= nil)then -- Spirit pet
-      siphonElement = element;
-      print ("You have a ".. element .. " " .. spirit .. " summoned");
-    else
+    if (element == nil)then -- Spirit pet
       avatar = pet.Name;
-      command
-      :next(function(self)print("Release "..avatar); end)
-      :next(function(self)
-        AshitaCore:GetChatManager():QueueCommand('/pet "Release" <me>', -1);
-      end)
-      :next(partial(wait, 1));
+      -- siphonElement = element;
+      -- print ("You have a ".. element .. " " .. spirit .. " summoned");
+
     end
+    command
+    :next(function(self)print("Release "..avatar); end)
+    :next(function(self)
+      AshitaCore:GetChatManager():QueueCommand('/pet "Release" <me>', -1);
+    end)
+    :next(partial(wait, 1));
+    -- end
   end
   if (siphonElement == nil)then -- We don't have an elemental summoned
     siphonElement = self:getBestElemental()
@@ -163,31 +165,49 @@ function jsmn:tick()
   if (not zones[AshitaCore:GetDataManager():GetParty():GetMemberZone(0)].hostile)then return end
   local cnf = config:get();
   if (cnf['AutoCast'] ~= true) then return end
-
   local player = AshitaCore:GetDataManager():GetPlayer();
-  local smn = cnf['summoner'];
+  local smn = cnf['Summoner'];
   local manapercent = AshitaCore:GetDataManager():GetParty():GetMemberCurrentMPP(0);
   local playerEntity = GetPlayerEntity();
 
   if (manapercent < 70 and buffs:IsAble(abilities.ELEMENTAL_SIPHON) and not buffs:AbilityOnCD("Elemental Siphon"))then
     return self:siphon();
   end
-  if (playerEntity.PetTargetIndex == 0 and cnf['AutoSummon']) then
-    actions.busy = true;
-    actions:queue(actions:new()
-      :next(partial(magic.cast, magic, smn['summon'], '<me>'))
-      :next(partial(wait, 7))
-      :next(function(self) actions.busy = false; end));
+  if (smn.AutoPact and ATTACK_TID)then
+    local mana = AshitaCore:GetDataManager():GetParty():GetMemberCurrentMP(0);
+    if(smn.BPRage[1] and not buffs:AbilityOnCD("Blood Pact: Rage"))then
+      if(buffs:IsAble(abilities[smn.BPRage[2]:gsub(" ","_"):upper()]))then
+        return self:pact(smn.BPRage[1], smn.BPRage[2]);
+      end
+    end
+    if(smn.BPWard[1] and not buffs:AbilityOnCD("Blood Pact: Ward"))then
+      if (buffs:IsAble(abilities[smn.BPWard[2]:gsub(" ","_"):upper()]) )then
+        print ("a")
+        return self:pact(smn.BPWard[1], smn.BPWard[2]);
+      end
+    end
+  end
+  if (playerEntity.PetTargetIndex == 0)then
+    PETTID = nil
+    if(cnf['AutoSummon']) then
+      actions.busy = true;
+      actions:queue(actions:new()
+        :next(partial(magic.cast, magic, self:getBestElemental().." Spirit", '<me>'))
+        :next(partial(wait, 2))
+        :next(function(self) actions.busy = false; end));
+    end
   else
-    -- local pet = GetEntity(playerEntity.PetTargetIndex);
-    -- if (pet ~= nil)then
-    --   if (pet.HealthPercent <= 50)then
-    --     if(not(buffs:AbilityOnCD("Spirit Link"))and buffs:IsAble(abilities.SPIRIT_LINK))then
-    --       queueJobAbility = 'Spirit Link';
-    --       queueTarget = '<me>';
-    --     end
-    --   end
-    -- end
+    local pet = GetEntity(playerEntity.PetTargetIndex);
+    PETTID = pet.ServerId;
+    if (pettarget ~= ATTACK_TID and ATTACK_TID ~= nil and not buffs:AbilityOnCD("Assault"))then -- Pet is not attacking the target
+      actions.busy = true;
+      actions:queue(actions:new()
+      :next(function(self)
+        AshitaCore:GetChatManager():QueueCommand('/pet "Assault" '.. ATTACK_TID, -1);
+      end)
+      :next(partial(wait, 1))
+      :next(function(self) actions.busy = false; end));
+    end
 
   end
 
@@ -210,51 +230,84 @@ function jsmn:tick()
 
 end
 
-function jsmn:autopact()
-
-end
-
-function jsmn:pact(type)
-  if (not zones[AshitaCore:GetDataManager():GetParty():GetMemberZone(0)].hostile)then return end
-  local playerEntity = GetPlayerEntity();
-  if (playerEntity.PetTargetIndex == 0)then 
-    print("No avatar summoned");
-    return
-  end
-  local pet = GetEntity(playerEntity.PetTargetIndex);
-  if(string.match(pet.Name, "(.*)(Spirit)"))then
-    print("Can't use pact with spirits.");
-    return
-  end
-  print (type)
-  if(not type)then
-    print("No pact type given")
-    return
-  end
-  if(not pacts[type])then
-    print ("Unknown pact type ".. type);
-    return
-  end
-  if(pacts[type][pet.Name])then
-    if(type == 'astralflow')then
-      local buffs = party:GetBuffs(0);
-      if (not buffs[packets.status.EFFECT_ASTRAL_FLOW])then
-        print("Astral flow not active!");
-        return;
-      end
-    end
-    actions.busy = true;
-    actions:queue(actions:new()
+function jsmn:pact(avatar, ability)
+  avatar=avatar:lower()
+  local command = actions:new();
+  local pet
+  local skipsummon = false
+  local playerEntity = GetPlayerEntity()
+  if (playerEntity.PetTargetIndex ~= 0)then -- Have pet  
+    pet = GetEntity(playerEntity.PetTargetIndex);
+    if (pet.Name:lower() ~= avatar)then
+      command
+      :next(function(self)print("Release "..avatar); end)
       :next(function(self)
-        AshitaCore:GetChatManager():QueueCommand('/pet "'..pacts[type][pet.Name]..'"', -1);
+        AshitaCore:GetChatManager():QueueCommand('/pet "Release" <me>', -1);
       end)
-      :next(partial(wait, 1))
-      :next(function(self) actions.busy = false; end));
-    return;
-  else
-    print(pet.Name.." does not have a ".. type .. " type pact.");
+      :next(partial(wait, 1));
+    else
+      skipsummon = true
+    end
   end
+  if (not skipsummon) then
+    command:next(partial(actions.pause, true))
+    :next(partial(magic.cast, magic, avatar, "<me>"))
+    :next(partial(wait, 7))
+    :next(partial(actions.pause, false));
+  end
+  command:next(function(self)
+    if (GetPlayerEntity().PetTargetIndex ~=0)then
+      AshitaCore:GetChatManager():QueueCommand('/pet "'..ability..'"', -1);
+    end
+  end)
+  :next(partial(wait, 1))
+  :next(function(self) actions.busy = false; end);
+
+  actions.busy = true;
+  actions:queue(command);
 end
+
+-- function jsmn:pact(type)
+--   if (not zones[AshitaCore:GetDataManager():GetParty():GetMemberZone(0)].hostile)then return end
+--   local playerEntity = GetPlayerEntity();
+--   if (playerEntity.PetTargetIndex == 0)then 
+--     print("No avatar summoned");
+--     return
+--   end
+--   local pet = GetEntity(playerEntity.PetTargetIndex);
+--   if(string.match(pet.Name, "(.*)(Spirit)"))then
+--     print("Can't use pact with spirits.");
+--     return
+--   end
+--   print (type)
+--   if(not type)then
+--     print("No pact type given")
+--     return
+--   end
+--   if(not pacts[type])then
+--     print ("Unknown pact type ".. type);
+--     return
+--   end
+--   if(pacts[type][pet.Name])then
+--     if(type == 'astralflow')then
+--       local buffs = party:GetBuffs(0);
+--       if (not buffs[packets.status.EFFECT_ASTRAL_FLOW])then
+--         print("Astral flow not active!");
+--         return;
+--       end
+--     end
+--     actions.busy = true;
+--     actions:queue(actions:new()
+--       :next(function(self)
+--         AshitaCore:GetChatManager():QueueCommand('/pet "'..pacts[type][pet.Name]..'"', -1);
+--       end)
+--       :next(partial(wait, 1))
+--       :next(function(self) actions.busy = false; end));
+--     return;
+--   else
+--     print(pet.Name.." does not have a ".. type .. " type pact.");
+--   end
+-- end
 
 function jsmn:attack(tid)
 
@@ -263,7 +316,7 @@ function jsmn:attack(tid)
     AshitaCore:GetChatManager():QueueCommand('/attack ' .. tid, 0);
   end)
   :next(function(self)
-    config:get().ATTACK_TID = tid;
+    ATTACK_TID = tid;
     AshitaCore:GetChatManager():QueueCommand('/follow ' .. tid, 0);
   end)
   :next(function(self)
@@ -274,7 +327,7 @@ end
 
 function jsmn:summoner(summoner, command, arg)
   local cnf = config:get();
-  local smn = cnf['summoner'];
+  local smn = cnf['Summoner'];
   local onoff = smn['practice'] and 'on' or 'off';
 
   if (command ~= nil) then

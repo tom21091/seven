@@ -47,7 +47,6 @@ map[Jobs.Puppetmaster] = jpup;
 local healing = false;
 
 return {
-  ATTACK_TID = nil,
 
   debuff = function(self, tid)
     local player = AshitaCore:GetDataManager():GetPlayer();
@@ -104,14 +103,14 @@ return {
       end
     end
   end,
-
+--TODO: Skillchains?
   ws = function(self, tid)
     local main = AshitaCore:GetDataManager():GetPlayer():GetMainJob();
     local cnf = config:get();
     local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();
     local tp = AshitaCore:GetDataManager():GetParty():GetMemberCurrentTP(0);
-    if (cnf.ATTACK_TID) then -- Attacking something
-      if (tp >= 1000 and cnf.ATTACK_TID ~= nil and cnf.WeaponSkill ~= nil) then -- Weaponskill
+    if (ATTACK_TID) then -- Attacking something
+      if (tp >= 1000 and ATTACK_TID ~= nil and cnf.WeaponSkill ~= nil) then -- Weaponskill
         local key = packets.weaponskills[string.upper(string.gsub(string.gsub(cnf.WeaponSkill," ","_"),":",""))];
         print (string.upper(string.gsub(string.gsub(cnf.WeaponSkill,":","")," ","_")))
         if (AshitaCore:GetDataManager():GetPlayer():HasWeaponSkill(key))then
@@ -134,29 +133,24 @@ return {
   end,
 
   reposition = function(self)
-    local main = AshitaCore:GetDataManager():GetPlayer():GetMainJob();
-    local targetname = ashita.ffxi.targets.get_target('t');	
-    if (targetname == nil) then
-      return false
-    end
-    local dist = math.sqrt(targetname.Distance)
+    local target = AshitaCore:GetDataManager():GetTarget()
+    if (ATTACK_TID ~= target:GetTargetServerId() or ATTACK_TID == nil)then return end
+    local entity = GetEntity(target:GetTargetIndex())
+    local dist = math.sqrt(entity.Distance)
     if (dist >=3.0)then 
-      print ("Too far");
-      for jobid, job in pairs(map) do
-        if (main == jobid and job.attack) then
-          local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();
-          return job:attack(tid);
-        end
-      end
+      -- print ("Too far");
+      AshitaCore:GetChatManager():QueueCommand("/follow ".. ATTACK_TID, -1);
+      return
     end
     if (dist < 1) then
-      print ("Too close");
+      -- print ("Too close");
       AshitaCore:GetChatManager():QueueCommand("/sendkey numpad2 down", -1);
       ashita.timer.once(0.001, function()
         AshitaCore:GetChatManager():QueueCommand("/sendkey numpad2 up", -1)
       end);
     end
-    local tardir = targetname.Heading
+    if(monstertarget == GetPlayerEntity().ServerId)then return end
+    local tardir = entity.Heading
 	  local degrees = tardir * (180 / math.pi) + 90;
     local pH = string.format('%2.3f',AshitaCore:GetDataManager():GetEntity():GetLocalYaw(AshitaCore:GetDataManager():GetParty():GetMemberTargetIndex(0)));	
     local idegrees = pH * (180 / math.pi) + 90;
@@ -242,39 +236,42 @@ return {
       return
     end
     if(actions.busy==true)then return end
-    if (cnf.ATTACK_TID) then -- Attacking something
-      if (tid ~= cnf.ATTACK_TID and not(tid == mytid and cnf.leader == GetPlayerEntity().Name)) then -- Target likely dead
-        cnf.ATTACK_TID = nil;
+    if (ATTACK_TID) then -- Attacking something
+      if (tid ~= ATTACK_TID and not(tid == mytid and cnf.leader == GetPlayerEntity().Name)) then -- Target likely dead
+        ATTACK_TID = nil;
+        config:save();
         if(cnf['follow']==true)then --follow leader
           AshitaCore:GetChatManager():QueueCommand("/follow " .. config:get().leader, 1);
         else --wait here
           self:stay();
         end
-      elseif (tp >= 1000 and actions.busy==false and cnf.ATTACK_TID == tid and cnf.AutoWS==true) then -- Weaponskill
+      elseif (tp >= 1000 and actions.busy==false and ATTACK_TID == tid and cnf.AutoWS==true) then -- Weaponskill
         if (cnf.WeaponSkill ~= nil ) then
           local key = packets.weaponskills[string.upper(string.gsub(string.gsub(cnf.WeaponSkill," ","_"),"TACHI:","TACHI"))];
           if (AshitaCore:GetDataManager():GetPlayer():HasWeaponSkill(key))then
             local target;
             if(cnf.WeaponSkill == "Starlight")then
               if(AshitaCore:GetDataManager():GetParty():GetMemberCurrentMPP(0)<75)then
+                actions.busy = true;
                 actions:queue(actions:new()
-                :next(partial(wait, 0.5))
                 :next(function(self)print("starlight");weaponskill("Starlight", "<me>"); end)
                 :next(partial(wait, 1))
+                :next(function(self) actions.busy = false; end)
               );
               end
             else
+              actions.busy = true;
               actions:queue(actions:new()
-              :next(partial(wait, 0.5))
               :next(function(self)print(cnf.WeaponSkill);weaponskill(string.gsub(cnf.WeaponSkill,"_"," "), tid); end)
               :next(partial(wait, 1))
+              :next(function(self) actions.busy = false; end)
             );
             end
           end
         end
       end
       if(GetPlayerEntity().Name == cnf['tank'])then
-        if (not(buffs:AbilityOnCD("Provoke")) and cnf.ATTACK_TID ~= nil and tid == cnf.ATTACK_TID) then
+        if (not(buffs:AbilityOnCD("Provoke")) and ATTACK_TID ~= nil and tid == ATTACK_TID) then
           print('Provoke');
           actions.busy = true;
           actions:queue(actions:new()

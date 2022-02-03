@@ -32,11 +32,11 @@ function jpld:tick()
 
   local queueJobAbility = nil;
 --   if(zones[AshitaCore:GetDataManager():GetParty():GetMemberZone(0)].hostile)then
---     if (buffs:IsAble(abilities.HASSO) and not(buffs:AbilityOnCD("Hasso")) and cnf.ATTACK_TID ~= nil) then
+--     if (buffs:IsAble(abilities.HASSO) and not(buffs:AbilityOnCD("Hasso")) and ATTACK_TID ~= nil) then
 --       queueJobAbility = "Hasso";
---     elseif (not(buffs:AbilityOnCD("Meditate")) and buffs:IsAble(abilities.MEDITATE) and cnf.ATTACK_TID ~= nil) then
+--     elseif (not(buffs:AbilityOnCD("Meditate")) and buffs:IsAble(abilities.MEDITATE) and ATTACK_TID ~= nil) then
 --         queueJobAbility = 'Meditate';
---     elseif (not(buffs:AbilityOnCD("Third Eye")) and buffs:IsAble(abilities.THIRD_EYE) and cnf.ATTACK_TID ~= nil) then
+--     elseif (not(buffs:AbilityOnCD("Third Eye")) and buffs:IsAble(abilities.THIRD_EYE) and ATTACK_TID ~= nil) then
 --         queueJobAbility = 'Third Eye';
 --     else
 --         queueJobAbility = nil;
@@ -59,7 +59,7 @@ function jpld:attack(tid)
       AshitaCore:GetChatManager():QueueCommand('/attack ' .. tid, 0);
     end)
     :next(function(self)
-      config:get().ATTACK_TID = tid;
+      ATTACK_TID = tid;
       AshitaCore:GetChatManager():QueueCommand('/follow ' .. tid, 0);
     end));
 end

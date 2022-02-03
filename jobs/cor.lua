@@ -70,7 +70,7 @@ function jcor:tick()
     end
   end
 
-  if (cnf.ATTACK_TID) then
+  if (ATTACK_TID) then
     actions.busy = true;
       actions:queue(actions:new()
       :next(partial(actions.pause, true))
@@ -90,7 +90,7 @@ function jcor:attack(tid)
       AshitaCore:GetChatManager():QueueCommand('/attack ' .. tid, 0);
     end)
     :next(function(self)
-      config:get().ATTACK_TID = tid;
+      ATTACK_TID = tid;
       AshitaCore:GetChatManager():QueueCommand('/follow ' .. tid, 0);
     end)
     );

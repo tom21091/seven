@@ -19,7 +19,7 @@ return {
     local tp = AshitaCore:GetDataManager():GetParty():GetMemberCurrentTP(0);
 
     -- Attempt to weaponskill when you have TP
-    -- if (cnf.ATTACK_TID and tid == cnf.ATTACK_TID and tp >= 1000) then
+    -- if (ATTACK_TID and tid == ATTACK_TID and tp >= 1000) then
     --   if (cnf.WeaponSkillID ~= nil ) then
     --     if AshitaCore:GetDataManager():GetPlayer():HasWeaponSkill(tonumber(cnf.WeaponSkillID)) then
     --       for k, v in pairs(packets.weaponskills) do
@@ -38,7 +38,7 @@ return {
         AshitaCore:GetChatManager():QueueCommand('/attack ' .. tid, 0);
       end)
       :next(function(self)
-        config:get().ATTACK_TID = tid;
+        ATTACK_TID = tid;
         AshitaCore:GetChatManager():QueueCommand('/follow ' .. tid, 0);
       end));
   end

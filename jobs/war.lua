@@ -23,7 +23,7 @@ return {
     if (party:GetBuffs(0)[packets.status.EFFECT_INVISIBLE]) then return end
 
     -- local sub = AshitaCore:GetDataManager():GetPlayer():GetSubJob();
-    -- if (sub == Jobs.Dancer and cnf.ATTACK_TID ~= nil) then
+    -- if (sub == Jobs.Dancer and ATTACK_TID ~= nil) then
     --   local status = party:GetBuffs(0);
     --   local tp = AshitaCore:GetDataManager():GetParty():GetMemberCurrentTP(0);
     --   if (tp >= 150 and buffs:IsAble(abilities.DRAIN_SAMBA, jdnc.ability_levels) and status[packets.status.EFFECT_DRAIN_SAMBA] ~= true) then
@@ -37,10 +37,10 @@ return {
     --   if (healing:DNCHeal()) then return end
     -- end
 
-    if(cnf.ATTACK_TID == nil)then return end
+    if(ATTACK_TID == nil)then return end
     local queueJobAbility = nil;
     local queueTarget = nil;
-    -- if (not(buffs:AbilityOnCD("Provoke")) and cnf.ATTACK_TID ~= nil) then
+    -- if (not(buffs:AbilityOnCD("Provoke")) and ATTACK_TID ~= nil) then
     --   print('provoke');
     --   queueJobAbility = 'Provoke';
     --   queueTarget = '<t>';
@@ -89,7 +89,7 @@ return {
         AshitaCore:GetChatManager():QueueCommand('/attack ' .. tid, 0);
       end)
       :next(function(self)
-        config:get().ATTACK_TID = tid;
+        ATTACK_TID = tid;
         AshitaCore:GetChatManager():QueueCommand('/follow ' .. tid, 0);
       end));
   end

@@ -16,7 +16,7 @@ return {
     local cnf = config:get();
     if(cnf.AutoCast~=true)then return end 
     local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();
-    if(cnf.ATTACK_TID == tid and cnf['AutoNuke']==true)then
+    if(ATTACK_TID == tid and cnf['AutoNuke']==true)then
       nukes:Nuke(tid);
     end
 
@@ -28,7 +28,7 @@ return {
       AshitaCore:GetChatManager():QueueCommand('/attack ' .. tid, 0);
     end)
     :next(function(self)
-      config:get().ATTACK_TID = tid;
+      ATTACK_TID = tid;
     end));
   end,
 

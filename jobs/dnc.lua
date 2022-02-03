@@ -25,12 +25,12 @@ return {
 
     local cnf = config:get();
     local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();
-    if (cnf.ATTACK_TID and tid ~= cnf.ATTACK_TID) then
-      cnf.ATTACK_TID = nil;
+    if (ATTACK_TID and tid ~= ATTACK_TID) then
+      ATTACK_TID = nil;
       AshitaCore:GetChatManager():QueueCommand("/follow " .. cnf.leader, 1);
     end
 
-    if (cnf.ATTACK_TID ~= nil) then
+    if (ATTACK_TID ~= nil) then
       local status = party:GetBuffs(0);
       local tp = AshitaCore:GetDataManager():GetParty():GetMemberCurrentTP(0);
       if (tp >= 150 and buffs:IsAble(abilities.DRAIN_SAMBA, ability_levels) and status[stoe.DRAIN_SAMBA] ~= true) then
@@ -50,7 +50,7 @@ return {
         AshitaCore:GetChatManager():QueueCommand('/attack ' .. tid, 0);
       end)
       :next(function(self)
-        config:get().ATTACK_TID = tid;
+        ATTACK_TID = tid;
         AshitaCore:GetChatManager():QueueCommand('/follow ' .. tid, 0);
       end));
   end

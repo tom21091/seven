@@ -20,7 +20,7 @@ return {
     if(cnf.AutoCast~=true)then return end
     local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();
     local tp = AshitaCore:GetDataManager():GetParty():GetMemberCurrentTP(0);
-    if ( cnf.ATTACK_TID == tid and cnf['AutoNuke']==true) then
+    if ( ATTACK_TID == tid and cnf['AutoNuke']==true) then
       if (nukes:Nuke(tid)) then return end
     end
     if (cnf['AutoHeal']==true)then
@@ -34,8 +34,8 @@ return {
 
     -- local cnf = config:get();
     -- local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();
-    -- if (cnf.ATTACK_TID and tid ~= cnf.ATTACK_TID) then
-    --   cnf.ATTACK_TID = nil;
+    -- if (ATTACK_TID and tid ~= ATTACK_TID) then
+    --   ATTACK_TID = nil;
     --   AshitaCore:GetChatManager():QueueCommand("/follow " .. cnf.leader, 1);
     -- end
 
@@ -47,7 +47,7 @@ return {
       AshitaCore:GetChatManager():QueueCommand('/attack ' .. tid, 0);
     end)
     :next(function(self)
-      config:get().ATTACK_TID = tid;
+      ATTACK_TID = tid;
       AshitaCore:GetChatManager():QueueCommand('/follow ' .. tid, 0);
     end));
   end,

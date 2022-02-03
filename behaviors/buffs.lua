@@ -120,7 +120,7 @@ function buffs:IdleBuffs()
     end
   end
 
-  if (config:get().ATTACK_TID ~= nil) then
+  if (ATTACK_TID ~= nil) then
     need = buffs:NeedBuff(status.EFFECT_AUSPICE);
     if (#need > 0 and magic:CanCast('AUSPICE') and (ashita.ffxi.recast.get_spell_recast_by_index(spells['AUSPICE'])==0)) then
       actions.busy = true;

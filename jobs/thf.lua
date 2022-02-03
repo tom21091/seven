@@ -18,7 +18,7 @@ return {
     local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();
     local tp = AshitaCore:GetDataManager():GetParty():GetMemberCurrentTP(0);
     -- Attempt to weaponskill when you have TP
-    -- if (cnf.ATTACK_TID and tid == cnf.ATTACK_TID and tp >= 1000) then
+    -- if (ATTACK_TID and tid == ATTACK_TID and tp >= 1000) then
     --   if (cnf.WeaponSkillID ~= nil ) then
     --     if AshitaCore:GetDataManager():GetPlayer():HasWeaponSkill(tonumber(cnf.WeaponSkillID)) then
     --       for k, v in pairs(packets.weaponskills) do
@@ -34,19 +34,19 @@ return {
 
     local queueJobAbility = nil;
     local queueTarget = nil;
-    -- if (not(buffs:AbilityOnCD("Provoke")) and cnf.ATTACK_TID ~= nil) then
+    -- if (not(buffs:AbilityOnCD("Provoke")) and ATTACK_TID ~= nil) then
     --   print('provoke');
     --   queueJobAbility = 'Provoke';
     --   queueTarget = '<t>';
-    if (not(buffs:AbilityOnCD("Steal")) and buffs:IsAble(abilities.STEAL) and cnf.ATTACK_TID ~= nil) then
+    if (not(buffs:AbilityOnCD("Steal")) and buffs:IsAble(abilities.STEAL) and ATTACK_TID ~= nil) then
       print('Steal');
       queueJobAbility = 'Steal';
       queueTarget = '<t>';
-    elseif (not(buffs:AbilityOnCD("Sneak Attack"))and buffs:IsAble(abilities.SNEAK_ATTACK) and cnf.ATTACK_TID ~= nil and self:checkSA()) then
+    elseif (not(buffs:AbilityOnCD("Sneak Attack"))and buffs:IsAble(abilities.SNEAK_ATTACK) and ATTACK_TID ~= nil and self:checkSA()) then
       print('Sneak Attack');
       queueJobAbility = 'Sneak Attack';
       queueTarget = '<me>';
-    elseif (not(buffs:AbilityOnCD("Trick Attack"))and buffs:IsAble(abilities.TRICK_ATTACK) and cnf.ATTACK_TID ~= nil and self:checkSA()) then
+    elseif (not(buffs:AbilityOnCD("Trick Attack"))and buffs:IsAble(abilities.TRICK_ATTACK) and ATTACK_TID ~= nil and self:checkSA()) then
       print('Trick Attack');
       queueJobAbility = 'Trick Attack';
       queueTarget = '<me>';
@@ -99,7 +99,7 @@ return {
         AshitaCore:GetChatManager():QueueCommand('/attack ' .. tid, 0);
       end)
       :next(function(self)
-        config:get().ATTACK_TID = tid;
+        ATTACK_TID = tid;
         AshitaCore:GetChatManager():QueueCommand('/follow ' .. tid, 0);
       end));
   end

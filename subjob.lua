@@ -51,7 +51,7 @@ local subjob = {};
     local sub = AshitaCore:GetDataManager():GetPlayer():GetSubJob();
     local status=party:GetBuffs(0);
     -- IF SUBJOB IS DANCER, DO DANCER THINGS
-    if (sub == Jobs.Dancer and cnf.ATTACK_TID ~= nil) then
+    if (sub == Jobs.Dancer and ATTACK_TID ~= nil) then
       if (tp >= 150 and buffs:IsAble(packets.abilities.DRAIN_SAMBA) and status[packets.stoe.DRAIN_SAMBA] ~= true) then
         actions.busy = true;
         actions:queue(actions:new()

@@ -12,6 +12,11 @@ function tableMerge(t1, t2)
           t1[k] = v
       end
   end
+  if next(t2) == nil then -- If the new table removed something, remove it here too
+    for k,v in pairs(t1)do
+        t1[k] = nil
+    end
+  end
   return t1
 end
 
@@ -23,10 +28,9 @@ function load_settings(player)
       WeaponSkill = "",
       leader = "",
       tank = "",
-      summon = "",
       bard = {},
       corsair = {},
-      summoner = {}
+      Summoner = {}
     }
     configs:save();
     print("New Character '"..player.. "' added to settings")
@@ -44,7 +48,7 @@ function configs:get()
   -- if (configs['all'][player] == nil) then -- This will use only local memory, not shared across characters
     load_settings(player);
   -- end
-
+    -- print (configs['all']['Tinie']['Summoner']['BPWard'][1])
   return configs['all'][player];
 end
   

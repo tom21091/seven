@@ -105,7 +105,7 @@ function jbrd:attack(tid)
       AshitaCore:GetChatManager():QueueCommand('/attack ' .. tid, 0);
     end)
     :next(function(self)
-      cnf.ATTACK_TID = tid;
+      ATTACK_TID = tid;
       AshitaCore:GetChatManager():QueueCommand('/follow ' .. tid, 0);
     end)
     :next(partial(wait, 4)));

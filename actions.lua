@@ -127,7 +127,8 @@ local actions = {
     elseif (isIn == true and action.waiting == 'packet_in') then
       local result = parts[1](action, false, id, size, packet);
       if (result ~= false) then
-        action.waiting, action.wait = result;
+        action.waiting = result;
+         action.wait = result;
         table.remove(parts, 1);
         action.count = 0;
         action.stalled = false;
@@ -135,7 +136,8 @@ local actions = {
     elseif (isIn == false and action.waiting == 'packet_out') then
       local result = parts[1](action, false, id, size, packet);
       if (result ~= false) then
-        action.waiting, action.wait = result;
+        action.waiting = result;
+        action.wait = result;
         table.remove(parts, 1);
         action.count = 0;
         action.stalled = false;

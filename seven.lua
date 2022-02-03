@@ -51,6 +51,13 @@ ashita.register_event('incoming_packet', function(id, size, packet)
     commands:process(id, size, packet);
   elseif (id == packets.inc.PACKET_PARTY_INVITE or id == packets.inc.PACKET_PARTY_STATUS_EFFECT) then
     party:process(id, size, packet);
+  elseif (id == packets.inc.PACKET_NPC_ACTION)then -- This monitors the last target of the attack TID
+    local actor = struct.unpack('I', packet, 6);
+    if (actor == ATTACK_TID)then
+      monstertarget = ashita.bits.unpack_be(packet, 150, 32);
+    elseif(actor == PETTID)then
+      pettarget = ashita.bits.unpack_be(packet, 150, 32);
+    end
   end
 
   return false;
@@ -122,9 +129,15 @@ ashita.register_event('command', function(cmd, nType)
 
   if(args[2] == 'dump')then
     party:DumpBuffs();
-  elseif(args[2] == 'db')then
-    local jsmn = require('jobs.smn');
-    jsmn:pact(args[3]);
+  elseif(args[2] == 'pact')then
+    if(args[5] == nil)then
+      print("Error: Pact requires player name, avatar name, and pact name")
+      print('SYNTAX: /seven pact tommywommy carbuncle "poison nails"');
+    else
+      AshitaCore:GetChatManager():QueueCommand('/l2 ' .. args[2] .. ' ' .. args[3] .. ' ' .. args[4] .. ' '.. args[5], 1);
+    end
+  elseif(args[2] == 'd')then
+    print(" tid:"..tid.." tidx:"..tidx.." myid:"..GetPlayerEntity().ServerId);
     -- actions:queue(actions:new()
     -- :next(function(self)print("Start wait"); end)
     -- :next(partial(wait, 0.01))

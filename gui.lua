@@ -20,6 +20,20 @@ local variables = {
     ['Tank']              = { {}, ImGuiVar_CDSTRING, 64 },
     ['AutoSummon']              = { {}, ImGuiVar_BOOLCPP },
     ['SummonCombo']                  = { {}, ImGuiVar_INT32, -1 },
+    ['AutoPact']              = { {}, ImGuiVar_BOOLCPP },
+
+    ['BPRageSelectable1']                 = { {}, ImGuiVar_BOOLCPP},
+    ['BPRageSelectable2']                 = { {}, ImGuiVar_BOOLCPP},
+    ['BPRageSelectable3']                 = { {}, ImGuiVar_BOOLCPP},
+    ['BPRageSelectable4']                 = { {}, ImGuiVar_BOOLCPP},
+    ['BPRageSelectable5']                 = { {}, ImGuiVar_BOOLCPP},
+    ['BPRageSelectable6']                 = { {}, ImGuiVar_BOOLCPP},
+    ['BPRageSelectable7']                 = { {}, ImGuiVar_BOOLCPP},
+    ['BPWardSelectable1']                 = { {}, ImGuiVar_BOOLCPP},
+    ['BPWardSelectable2']                 = { {}, ImGuiVar_BOOLCPP},
+    ['BPWardSelectable3']                 = { {}, ImGuiVar_BOOLCPP},
+    ['BPWardSelectable4']                 = { {}, ImGuiVar_BOOLCPP},
+    ['BPWardSelectable5']                 = { {}, ImGuiVar_BOOLCPP},
 }
 
 local rolls = {
@@ -28,6 +42,28 @@ local rolls = {
 local summons = {
     "Carbuncle", "Fenrir", "Diabolos", "Ifrit", "Titan", "Leviathan", "Garuda", "Shiva", "Ramuh", "Odin", "Alexander", "Cait Sith",
     "Light Spirit", "Dark Spirit", "Fire Spirit", "Earth Spirit", "Water Spirit", "Air Spirit", "Ice Spirit", "Thunder Spirit"
+}
+local BPRage = {
+    Carbuncle = {"Poison Nails", "Meteorite"},
+    Diabolos = {"Camisado", "Nether Blast"},
+    Fenrir = {"Moonlit Charge", "Crescent Fang", "Eclipse Bite"},
+    Garuda = {"Claw", "Aero II", "Aero IV", "Predator Claws", "Wind Blade"},
+    Ifrit = {"Punch","Fire II", "Burning Strike", "Double Punch", "Fire IV", "Flaming Crush", "Meteor Strike"},
+    Leviathan = {"Barracuda Dive", "Water II", "Tail Whip", "Water IV","Spinning Dive", "Grand Fall"},
+    Ramuh = { "Shock Strike", "Thunder II", "Thunderspark", "Thunder IV", "Chaotic Strike", "Thunderstorm"},
+    Shiva = {"Axe Kick", "Blizzard II", "Double Slap", "Blizzard IV", "Rush", "Heavenly Strike"},
+    Titan = {"Rock Throw", "Stone II", "Rock Buster", "Megalith Throw", "Stone IV","Mountain Buster", "Geocrush"}
+}
+local BPWard = {
+    Carbuncle = {"Healing Ruby","Shining Ruby", "Glittering Ruby", "Healing Ruby II"},
+    Diabolos = {"Somnolence", "Nightmare", "Ultimate Terror", "NoctoShield", "Dream Shroud"},
+    Fenrir = {"Lunar Cry", "Lunar Roar", "Ecliptic Growl", "Ecliptic Howl"},
+    Garuda = {"Aerial Armor", "Whispering Wind", "Hastega"},
+    Ifrit = {"Crimson Howl"},
+    Leviathan = {"Slowga", "Spring Water"},
+    Ramuh = {"Rolling Thunder", "Lightning Armor"},
+    Shiva = {"Frost Armor", "Sleepga"},
+    Titan = {"Earthen Ward"}
 }
 
 function gui:update()
@@ -90,11 +126,11 @@ function gui:loadConfig()
         imgui.SetVarValue(variables['Tank'][1][player],"");
         imgui.SetVarValue(variables['Tank'][1][player],cnf['tank']);
         imgui.SetVarValue(variables['AutoRoll'][1][player],cnf['corsair']['roll']);
-        for k ,v in pairs(summons) do
-            if (cnf['summoner']['summon'] == v)then
-                imgui.SetVarValue(variables['SummonCombo'][1][player],k-1);
-            end
-        end
+        -- for k ,v in pairs(summons) do
+        --     if (cnf['Summoner']['summon'] == v)then
+        --         imgui.SetVarValue(variables['SummonCombo'][1][player],k-1);
+        --     end
+        -- end
         for k ,v in pairs(rolls) do
             if (cnf['corsair']['roll1'] == v)then
                 imgui.SetVarValue(variables['RollCombo1'][1][player],k-1);
@@ -107,11 +143,18 @@ function gui:loadConfig()
 end
 
 function gui:showMenu(player)
+    if(imgui.SmallButton("Set Leader"))then
+        for p, cnf in pairs(self.all)do
+            cnf['leader'] = player;
+        end
+        config:save();
+    end
+    imgui.Separator();
     if(imgui.Checkbox("Disable All", variables['Disable All'][1][player]))then
         self.all[player]['escape'] = imgui.GetVarValue(variables['Disable All'][1][player]);
         config:save();
     end
-    imgui.Separator();
+    
     if(imgui.Checkbox("Auto SA Position", variables['AutoPosition'][1][player]))then
         self.all[player]['AutoPosition'] = imgui.GetVarValue(variables['AutoPosition'][1][player]);
         config:save();
@@ -157,7 +200,7 @@ function gui:showMenu(player)
         config:save();
     end
     imgui.Separator();
-    if (imgui.CollapsingHeader('AutoCast Settings', variables['AutoCast'][1][player])) then
+    if (imgui.TreeNode('Autocast Settings')) then
         if(imgui.Checkbox("Nukes", variables['AutoNuke'][1][player]))then
             self.all[player]['AutoNuke'] = imgui.GetVarValue(variables['AutoNuke'][1][player]);
             config:save();
@@ -172,16 +215,72 @@ function gui:showMenu(player)
                 config:save();
             end
         end
-        if(imgui.Checkbox("AutoSummon", variables['AutoSummon'][1][player]))then
-            self.all[player]['AutoSummon'] = imgui.GetVarValue(variables['AutoSummon'][1][player]);
-            config:save();
-        end
-        if(self.all[player]['AutoSummon'])then
-            if (imgui.Combo("Summon",variables['SummonCombo'][1][player],"Carbuncle\0Fenrir\0Diabolos\0Ifrit\0Titan\0Leviathan\0Garuda\0Shiva\0Ramuh\0Odin\0Alexander\0Cait Sith\0Light Spirit\0Dark Spirit\0Fire Spirit\0Earth Spirit\0Water Spirit\0Air Spirit\0Ice Spirit\0Thunder Spirit\0\0"))then
-                self.all[player]['summoner']['summon'] = summons[imgui.GetVarValue(variables['SummonCombo'][1][player])+1]
+        if (imgui.CollapsingHeader('Summoner Settings')) then
+            if(imgui.Checkbox("AutoSummon", variables['AutoSummon'][1][player]))then
+                self.all[player]['AutoSummon'] = imgui.GetVarValue(variables['AutoSummon'][1][player]);
                 config:save();
             end
+            if (imgui.Combo("Summon",variables['SummonCombo'][1][player],"Carbuncle\0Fenrir\0Diabolos\0Ifrit\0Titan\0Leviathan\0Garuda\0Shiva\0Ramuh\0Odin\0Alexander\0Cait Sith\0Light Spirit\0Dark Spirit\0Fire Spirit\0Earth Spirit\0Water Spirit\0Air Spirit\0Ice Spirit\0Thunder Spirit\0\0"))then
+                self.all[player]['Summoner']['summon'] = summons[imgui.GetVarValue(variables['SummonCombo'][1][player])+1]
+                config:save();
+            end
+            if(imgui.Checkbox("AutoPact", variables['AutoPact'][1][player]))then
+                self.all[player]['Summoner']['AutoPact'] = imgui.GetVarValue(variables['AutoPact'][1][player]);
+                config:save();
+            end
+            imgui.Text("Current: ")
+            imgui.Columns(2, nil, false);
+
+            if(self.all[player]['Summoner']['BPRage'] and self.all[player]['Summoner']['BPRage'][1])then
+                imgui.Text(self.all[player]['Summoner']['BPRage'][1]..":"..self.all[player]['Summoner']['BPRage'][2])
+            end
+            imgui.NextColumn();
+            if(self.all[player]['Summoner']['BPWard'] and self.all[player]['Summoner']['BPWard'][1]) then
+                imgui.Text(self.all[player]['Summoner']['BPWard'][1]..":"..self.all[player]['Summoner']['BPWard'][2])
+            end
+            imgui.NextColumn();
+            if(imgui.SmallButton("Clear Rage"))then
+                self.all[player]['Summoner']['BPRage']={}           
+                config:save();
+            end
+            imgui.NextColumn();
+            if(imgui.SmallButton("Clear Ward"))then
+                self.all[player]['Summoner']['BPWard']={}           
+                config:save();
+            end
+            imgui.Columns(1);
+            imgui.Separator();
+            for Avatar, _ in pairs(BPRage) do
+                if (imgui.TreeNode(Avatar)) then
+                    imgui.Columns(2, nil, false);
+                    for i, ability in ipairs(BPRage[Avatar])do
+                        if (imgui.Selectable(ability, imgui.GetVarValue(variables['BPRageSelectable'..i][1][player]), ImGuiSelectableFlags_AllowDoubleClick)) then
+                            if (imgui.IsMouseDoubleClicked(0)) then
+                                AshitaCore:GetChatManager():QueueCommand('/l2 pact ' .. player .. ' ' .. Avatar .. ' "'.. ability ..'"', 1);
+                            else
+                                self.all[player]['Summoner']['BPRage']={Avatar, ability}
+                                config:save();
+                            end
+                            
+                        end
+                    end
+                    imgui.NextColumn();
+                    for i, ability in ipairs(BPWard[Avatar])do
+                        if (imgui.Selectable(ability, imgui.GetVarValue(variables['BPWardSelectable'..i][1][player]), ImGuiSelectableFlags_AllowDoubleClick)) then
+                            if (imgui.IsMouseDoubleClicked(0)) then
+                                AshitaCore:GetChatManager():QueueCommand('/l2 pact ' .. player .. ' ' .. Avatar .. ' "'.. ability ..'"', 1);
+                            else
+                                self.all[player]['Summoner']['BPWard']={Avatar, ability}
+                                config:save();
+                            end
+                        end
+                    end
+                    imgui.Columns(1);
+                    imgui.TreePop()
+                end
+            end
         end
+        imgui.TreePop()
     end
     imgui.Separator();
     if (imgui.CollapsingHeader('Corsair Settings')) then
@@ -210,14 +309,7 @@ function gui:main()
         imgui.End();
         return;
     end
-    if(imgui.SmallButton("Set Leader"))then
-        local entity = GetPlayerEntity();
-        if (not(entity)) then return end
-        for player, cnf in pairs(self.all)do
-            cnf['leader'] = entity.Name;
-        end
-        config:save();
-    end
+    
     for player, cnf in pairs(self.all)do
         if (imgui.TreeNode(player))then
             self:showMenu(player)

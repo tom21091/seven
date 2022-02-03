@@ -31,7 +31,7 @@ return {
       AshitaCore:GetChatManager():QueueCommand('/attack ' .. tid, 0);
     end)
     :next(function(self)
-      config:get().ATTACK_TID = tid;
+      ATTACK_TID = tid;
       AshitaCore:GetChatManager():QueueCommand('/follow ' .. tid, 0);
     end)
     

@@ -8,6 +8,11 @@ local tout = {};
 --   print('IN: ' .. packet:hex());
 -- end);
 
+function string.tohex(str)
+  return (str:gsub('.', function (c)
+      return string.format('%02X ', string.byte(c))
+  end))
+end
 
 -- table.insert(tout, packets.out.PACKET_NPC_INTERACTION, function(id, size, packet)
 --   -- https://github.com/Windower/Lua/blob/422880f0e353a82bb9a11328dc4202ed76cd948a/addons/libs/packets/fields.lua#L349
@@ -37,8 +42,15 @@ local tout = {};
 
 return {
   inc = function(self, id, size, packet)
-    -- if (id ~= 0x4D) then
-    --   print('IN: ' .. tostring(packet));
+    -- if (id == 0x28) then
+    --   print('IN: ' .. string.tohex(tostring(packet)));
+    --   local actor = struct.unpack('I', packet, 6);
+    --   local category = ashita.bits.unpack_be(packet, 82, 4);
+    --   local param = ashita.bits.unpack_be(packet, 86, 16);
+    --   local effect = ashita.bits.unpack_be(packet, 213, 17);
+    --   local msg = ashita.bits.unpack_be(packet, 230, 10);
+    --   local target = ashita.bits.unpack_be(packet, 150, 32);
+    --   print ("Actor:".. actor.." category:"..category.." param:"..param.." effect:"..effect.." msg:"..msg.. " target:"..target)
     -- end
     if (tinc[id] ~= nil) then
       tinc[id](id, size, packet);
