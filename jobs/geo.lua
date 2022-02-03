@@ -285,7 +285,7 @@ function jgeo:Hate()
   return true;
 end
 
-function jgeo:geo(self, command, arg)
+function jgeo:geo(command, arg)
   local cnf = config:get();
   local geo = cnf['geomancer'];
   local onoff = geo['practice'] and 'on' or 'off';

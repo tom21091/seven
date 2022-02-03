@@ -176,13 +176,12 @@ function jsmn:tick()
   if (smn.AutoPact and ATTACK_TID)then
     local mana = AshitaCore:GetDataManager():GetParty():GetMemberCurrentMP(0);
     if(smn.BPRage[1] and not buffs:AbilityOnCD("Blood Pact: Rage"))then
-      if(buffs:IsAble(abilities[smn.BPRage[2]:gsub(" ","_"):upper()]))then
+      if(buffs:IsAble(abilities[smn.BPRage[2]:gsub(" ","_"):upper()]) and mpcost["SMN_"..smn.BPRage[2]:gsub(" ","_"):upper()]+20 <= mana)then
         return self:pact(smn.BPRage[1], smn.BPRage[2]);
       end
     end
     if(smn.BPWard[1] and not buffs:AbilityOnCD("Blood Pact: Ward"))then
-      if (buffs:IsAble(abilities[smn.BPWard[2]:gsub(" ","_"):upper()]) )then
-        print ("a")
+      if (buffs:IsAble(abilities[smn.BPWard[2]:gsub(" ","_"):upper()]) and mpcost["SMN_"..smn.BPWard[2]:gsub(" ","_"):upper()]+20 <= mana)then
         return self:pact(smn.BPWard[1], smn.BPWard[2]);
       end
     end

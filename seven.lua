@@ -1,6 +1,6 @@
-_addon.author   = 'siete/Tommywommy';
+_addon.author   = 'Yarbles - Asura/Tommywommy';
 _addon.name     = 'seven';
-_addon.version  = '0.3';
+_addon.version  = '1.1.0';
 
 require 'common';
 local config = require('config');
@@ -13,7 +13,7 @@ local party = require('party');
 local pgen = require('pgen');
 local fov = require('fov');
 local gui = require('gui');
-
+local jgeo = require('jobs.geo');
 local jcor = require('jobs.cor');
 
 function wait(time)
@@ -347,6 +347,8 @@ ashita.register_event('command', function(cmd, nType)
     AshitaCore:GetChatManager():QueueCommand('/l2 corsair ' .. (args[3] or '') .. ' ' .. (args[4] or ''), 1);
   elseif (args[2] == 'summoner') then
     AshitaCore:GetChatManager():QueueCommand('/l2 summoner ' .. (args[3] or '') .. ' ' .. (args[4] or ''), 1);
+  elseif (args[2] == 'geo') then
+    AshitaCore:GetChatManager():QueueCommand('/l2 geo ' .. (args[3] or '') .. ' ' .. (args[4] or ''), 1);
   elseif (args[2] == 'corn') then
     AshitaCore:GetChatManager():QueueCommand('/l2 corn' .. ' ' .. tid .. ' ' .. tidx, 1);
     actions:corn(tid, tidx);

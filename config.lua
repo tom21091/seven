@@ -30,7 +30,8 @@ function load_settings(player)
       tank = "",
       bard = {},
       corsair = {},
-      Summoner = {}
+      Summoner = {},
+      geomancer = {}
     }
     configs:save();
     print("New Character '"..player.. "' added to settings")
@@ -48,7 +49,6 @@ function configs:get()
   -- if (configs['all'][player] == nil) then -- This will use only local memory, not shared across characters
     load_settings(player);
   -- end
-    -- print (configs['all']['Tinie']['Summoner']['BPWard'][1])
   return configs['all'][player];
 end
   
