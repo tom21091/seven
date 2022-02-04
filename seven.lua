@@ -15,6 +15,7 @@ local fov = require('fov');
 local gui = require('gui');
 local jgeo = require('jobs.geo');
 local jcor = require('jobs.cor');
+local jsmn = require('jobs.smn');
 
 function wait(time)
   return 'wait', time;
@@ -134,7 +135,11 @@ ashita.register_event('command', function(cmd, nType)
       print("Error: Pact requires player name, avatar name, and pact name")
       print('SYNTAX: /seven pact tommywommy carbuncle "poison nails"');
     else
-      AshitaCore:GetChatManager():QueueCommand('/l2 ' .. args[2] .. ' ' .. args[3] .. ' ' .. args[4] .. ' '.. args[5], 1);
+      if (args[3]:lower() == GetPlayerEntity().Name:lower())then
+        jsmn:pact(args[4], args[5]);
+      else
+        AshitaCore:GetChatManager():QueueCommand('/l2 ' .. args[2] .. ' ' .. args[3] .. ' ' .. args[4] .. ' "'.. args[5]..'"', 1);
+      end
     end
   elseif(args[2] == 'd')then
     print(" tid:"..tid.." tidx:"..tidx.." myid:"..GetPlayerEntity().ServerId);

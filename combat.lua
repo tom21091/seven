@@ -228,15 +228,19 @@ return {
     local cnf = config:get();
     if (cnf == nil) then return end
     local status = party:GetBuffs(0);
+    
     if (status[packets.status.EFFECT_INVISIBLE]) then return end
     
     local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();
     local main = AshitaCore:GetDataManager():GetPlayer():GetMainJob();
     local tp = AshitaCore:GetDataManager():GetParty():GetMemberCurrentTP(0);
-    local mytid = GetPlayerEntity().ServerId;
+    local entity = GetPlayerEntity()
+    local mytid = entity.ServerId;
+    local health = entity.HealthPercent;
     if(cnf['escape']==true)then-- running away, don't stop
       return
     end
+    if (health == 0) then return end -- Dead
     if(actions.busy==true)then return end
     if (ATTACK_TID) then -- Attacking something
       if (tid ~= ATTACK_TID and not(tid == mytid and cnf.leader == GetPlayerEntity().Name)) then -- Target likely dead

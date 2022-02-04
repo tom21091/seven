@@ -47,14 +47,12 @@ return {
       local target = idxs[1];
       if (target == 0) then
         target = '<me>'
+        dist = 0
       else
         if (GetEntity(iparty:GetMemberTargetIndex(target)) ~= nil)then
           dist = math.sqrt(GetEntity(iparty:GetMemberTargetIndex(target)).Distance);
         end
         target = iparty:GetMemberServerId(target);
-        
-        
-        
       end
       local spell, waitindex, spellkey = magic:highest("Cure", false);
       if (spell==nil)then return false end;

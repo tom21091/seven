@@ -246,10 +246,14 @@ function gui:showMenu(player)
 
             if(self.all[player]['Summoner']['BPRage'] and self.all[player]['Summoner']['BPRage'][1])then
                 imgui.Text(self.all[player]['Summoner']['BPRage'][1]..":"..self.all[player]['Summoner']['BPRage'][2])
+            else
+                imgui.Text("");
             end
             imgui.NextColumn();
             if(self.all[player]['Summoner']['BPWard'] and self.all[player]['Summoner']['BPWard'][1]) then
                 imgui.Text(self.all[player]['Summoner']['BPWard'][1]..":"..self.all[player]['Summoner']['BPWard'][2])
+            else
+                imgui.Text("");
             end
             imgui.NextColumn();
             if(imgui.SmallButton("Clear Rage"))then
@@ -269,7 +273,9 @@ function gui:showMenu(player)
                     for i, ability in ipairs(BPRage[Avatar])do
                         if (imgui.Selectable(ability, imgui.GetVarValue(variables['BPRageSelectable'..i][1][player]), ImGuiSelectableFlags_AllowDoubleClick)) then
                             if (imgui.IsMouseDoubleClicked(0)) then
-                                AshitaCore:GetChatManager():QueueCommand('/l2 pact ' .. player .. ' ' .. Avatar .. ' "'.. ability ..'"', 1);
+                                AshitaCore:GetChatManager():QueueCommand('/seven pact ' .. player .. ' ' .. Avatar .. ' "'.. ability ..'"', 1);
+                                self.all[player]['Summoner']['BPRage']={}
+                                config:save();
                             else
                                 self.all[player]['Summoner']['BPRage']={Avatar, ability}
                                 config:save();
@@ -281,7 +287,9 @@ function gui:showMenu(player)
                     for i, ability in ipairs(BPWard[Avatar])do
                         if (imgui.Selectable(ability, imgui.GetVarValue(variables['BPWardSelectable'..i][1][player]), ImGuiSelectableFlags_AllowDoubleClick)) then
                             if (imgui.IsMouseDoubleClicked(0)) then
-                                AshitaCore:GetChatManager():QueueCommand('/l2 pact ' .. player .. ' ' .. Avatar .. ' "'.. ability ..'"', 1);
+                                AshitaCore:GetChatManager():QueueCommand('/seven pact ' .. player .. ' ' .. Avatar .. ' "'.. ability ..'"', 1);
+                                self.all[player]['Summoner']['BPWard']={}
+                                config:save();
                             else
                                 self.all[player]['Summoner']['BPWard']={Avatar, ability}
                                 config:save();
@@ -313,27 +321,33 @@ function gui:showMenu(player)
         end
         
     end
-    imgui.Separator();
 end
 
 function gui:main()
-    imgui.SetNextWindowSize(300, 400, ImGuiSetCond_FirstUseEver);
-    if (imgui.Begin('Seven') == false) then
-        imgui.End();
-        return;
-    end
+    -- imgui.SetNextWindowSize(300, 400, ImGuiSetCond_FirstUseEver);
+    -- if (imgui.Begin('Seven') == false) then
+    --     imgui.End();
+    --     return;
+    -- end
     
     for player, cnf in pairs(self.all)do
-        if (imgui.TreeNode(player))then
-            self:showMenu(player)
-            imgui.TreePop();
+        imgui.SetNextWindowSize(300, 400, ImGuiSetCond_FirstUseEver);
+        if (imgui.Begin(player) == false) then
+            imgui.End();
+            return;
         end
+        self:showMenu(player)
+        -- if (imgui.TreeNode(player))then
+            -- self:showMenu(player)
+        --     imgui.TreePop();
+        -- end
+        imgui.End();
     end
     
     -- if(imgui.SmallButton("Save"))then
     --     config:save();
     -- end
-    imgui.End();
+    -- imgui.End();
 end
 
 

@@ -105,7 +105,8 @@ function jsmn:siphon()
 
     end
     command
-    :next(function(self)print("Release "..avatar); end)
+    :next(function(self)
+      if (avatar)then print("Release "..avatar);end end)
     :next(function(self)
       AshitaCore:GetChatManager():QueueCommand('/pet "Release" <me>', -1);
     end)
@@ -130,7 +131,7 @@ function jsmn:siphon()
   command
   :next(function(self)print("Suck em up"); end)
   :next(function(self)
-    if (GetPlayerEntity().PetTargetIndex ~=0)then
+    if (GetPlayerEntity() ~=0 and GetPlayerEntity().PetTargetIndex ~=0)then
       AshitaCore:GetChatManager():QueueCommand('/ja "Elemental Siphon" <me>', -1);
     else
       print("No pet summoned, skipping Elemental Siphon");
@@ -193,7 +194,7 @@ function jsmn:tick()
   end
   if (playerEntity.PetTargetIndex == 0)then
     PETTID = nil
-    if(smn['AutoSummon'] and ATTACK_TID ~= nil) then
+    if(smn['AutoSummon'] and ATTACK_TID ~= nil and manapercent > 10) then
       local bestelement = self:getBestElemental()
       local command = actions:new()
       local spirit
@@ -218,9 +219,11 @@ function jsmn:tick()
     end
   else
     local pet = GetEntity(playerEntity.PetTargetIndex);
+    
     PETTID = pet.ServerId;
     if (ATTACK_TID == nil)then
-      if(smn.AutoRelease)then
+      local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();
+      if(smn.AutoRelease and (tid == playerEntity.ServerId or tid == 0x4000000))then
         actions.busy = true;
         actions:queue(actions:new()
         :next(function(self)
@@ -232,7 +235,9 @@ function jsmn:tick()
       actions.busy = true;
       actions:queue(actions:new()
       :next(function(self)
-        AshitaCore:GetChatManager():QueueCommand('/pet "Assault" '.. ATTACK_TID, -1);
+        if(ATTACK_TID~=nil)then
+          AshitaCore:GetChatManager():QueueCommand('/pet "Assault" '.. ATTACK_TID, -1);
+        end
       end)
       :next(partial(wait, 1))
       :next(function(self) actions.busy = false; end));
@@ -269,7 +274,7 @@ function jsmn:pact(avatar, ability)
     pet = GetEntity(playerEntity.PetTargetIndex);
     if (pet.Name:lower() ~= avatar)then
       command
-      :next(function(self)print("Release "..avatar); end)
+      :next(function(self)print("Release "..pet.Name); end)
       :next(function(self)
         AshitaCore:GetChatManager():QueueCommand('/pet "Release" <me>', -1);
       end)
@@ -354,9 +359,6 @@ function jsmn:attack(tid)
   :next(function(self)
     ATTACK_TID = tid;
     AshitaCore:GetChatManager():QueueCommand('/follow ' .. tid, 0);
-  end)
-  :next(function(self)
-    AshitaCore:GetChatManager():QueueCommand('/pet "Assault" '.. tid, 0);
   end)
   );
 end

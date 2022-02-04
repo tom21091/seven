@@ -215,6 +215,19 @@ function buffs:Cleanse()
       return true;
     end
   end
+  need = buffs:NeedCleanse(status.EFFECT_DOOM);
+  if (#need > 0) then
+    if (magic:CanCast('CURSNA')and ashita.ffxi.recast.get_spell_recast_by_index(spells['CURSNA'])==0 and AshitaCore:GetDataManager():GetParty():GetMemberCurrentMP(0) > packets.mpcost['CURSNA'])then
+      actions.busy = true;
+      actions:queue(actions:new()
+        :next(partial(actions.pause, true))
+        :next(partial(magic.cast, magic, 'Cursna', need[math.random(#need)]))
+        :next(partial(wait, 1))
+        :next(partial(actions.pause, false))
+        :next(function(self) actions.busy = false; end));
+      return true;
+    end
+  end
   need = buffs:NeedCleanse(status.EFFECT_PETRIFICATION);
   if (#need > 0) then
     if(magic:CanCast('STONA')and ashita.ffxi.recast.get_spell_recast_by_index(spells['STONA'])==0 and AshitaCore:GetDataManager():GetParty():GetMemberCurrentMP(0) > packets.mpcost['STONA'])then
@@ -222,6 +235,19 @@ function buffs:Cleanse()
       actions:queue(actions:new()
         :next(partial(actions.pause, true))
         :next(partial(magic.cast, magic, 'Stona', need[math.random(#need)]))
+        :next(partial(wait, 1))
+        :next(partial(actions.pause, false))
+        :next(function(self) actions.busy = false; end));
+      return true;
+    end
+  end
+  need = buffs:NeedCleanse(status.EFFECT_SILENCE);
+  if (#need > 0) then
+    if(magic:CanCast('SILENA')and ashita.ffxi.recast.get_spell_recast_by_index(spells['SILENA'])==0 and AshitaCore:GetDataManager():GetParty():GetMemberCurrentMP(0) > packets.mpcost['SILENA'])then
+      actions.busy = true;
+      actions:queue(actions:new()
+        :next(partial(actions.pause, true))
+        :next(partial(magic.cast, magic, 'Silena', need[math.random(#need)]))
         :next(partial(wait, 1))
         :next(partial(actions.pause, false))
         :next(function(self) actions.busy = false; end));

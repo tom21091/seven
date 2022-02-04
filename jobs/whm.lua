@@ -12,12 +12,15 @@ local jwhm = {};
 
 function jwhm:tick()
   if not (zones[AshitaCore:GetDataManager():GetParty():GetMemberZone(0)].hostile)then return end
+  local buff = party:GetBuffs(0);
+  if (buff[packets.status.EFFECT_INVISIBLE]) then return end
+  if (actions.busy) then return end
   local cnf = config:get();
   local tid = AshitaCore:GetDataManager():GetTarget():GetTargetServerId();
   local tp = AshitaCore:GetDataManager():GetParty():GetMemberCurrentTP(0);
-
-  if (actions.busy) then return end
-  if (cnf['AutoCast']~=true)then return end
+ 
+  
+  if (cnf['AutoCast']~=true or buff[packets.status.EFFECT_SILENCE])then print("no") return end
   if (cnf['AutoHeal']==true)then
     if (healing:Heal()) then return end -- first priority...
     if (buffs:Cleanse()) then return end
