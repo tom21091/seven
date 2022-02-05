@@ -44,6 +44,7 @@ function buffs:NeedBuff(buff, ...)
 
   party:PartyBuffs(function(i, buffs, pid)
     if (i == 0) then return end
+    if (pid > 0x1000000)then return end -- Ignore Trusts
     local idx = party:ById(pid);
     local samez = zone == iparty:GetMemberZone(idx);
     local alive = iparty:GetMemberCurrentHPP(idx) > 0;

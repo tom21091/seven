@@ -12,7 +12,7 @@ return {
 
   -- cast nuke on target
   Nuke = function(self, tid, spellName)
-    local names = {'THUNDER','BLIZZARD','FIRE','AERO','WATER','STONE','BANISH'};
+    local names = {'THUNDER','BLIZZARD','FIRE','AERO','WATER','STONE','BANISH','HOLY'};
 
     local waits = {1, 1.5, 3, 6};
     local dist = math.sqrt(GetEntity(AshitaCore:GetDataManager():GetTarget():GetTargetIndex()).Distance); -- This selects the current target, which is technically wrong, but I'm not sure how to get the entity index from the tid
@@ -20,7 +20,7 @@ return {
     if(spellName==nil)then
       local spell, waitindex = magic:highest(names, true);
       
-      if(spell==nil)then print('Get highest tier failed'); return false end
+      if(spell==nil)then return false end
       actions.busy = true;
       actions:queue(actions:new()
         :next(partial(actions.pause, true))

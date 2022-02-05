@@ -8,6 +8,7 @@ local variables = {
     ['AutoHeal']         = { {}, ImGuiVar_BOOLCPP },
     ['AutoNuke']         = { {}, ImGuiVar_BOOLCPP },
     ['HealThreshold']         = { {}, ImGuiVar_INT32, 60 },
+    ['NukeManaCutoff']         = { {}, ImGuiVar_INT32, 20 },
     ['IdleBuffs']         = { {}, ImGuiVar_BOOLCPP },
     ['SneakyTime']         = { {}, ImGuiVar_BOOLCPP },
     ['AutoFollow']         = { {}, ImGuiVar_BOOLCPP },
@@ -116,6 +117,7 @@ function gui:loadConfig()
         imgui.SetVarValue(variables['AutoHeal'][1][player],cnf['AutoHeal']);
         imgui.SetVarValue(variables['AutoNuke'][1][player],cnf['AutoNuke']);
         imgui.SetVarValue(variables['HealThreshold'][1][player],cnf['HealThreshold']);
+        imgui.SetVarValue(variables['NukeManaCutoff'][1][player],cnf['NukeManaCutoff']);
         imgui.SetVarValue(variables['AutoWS'][1][player],cnf['AutoWS']);
         imgui.SetVarValue(variables['IdleBuffs'][1][player],cnf['IdleBuffs']);
         imgui.SetVarValue(variables['SneakyTime'][1][player],cnf['SneakyTime']);
@@ -208,13 +210,19 @@ function gui:showMenu(player)
         if(imgui.Checkbox("Nukes", variables['AutoNuke'][1][player]))then
             self.all[player]['AutoNuke'] = imgui.GetVarValue(variables['AutoNuke'][1][player]);
             config:save();
-        end          
+        end 
+        if(self.all[player]['AutoNuke'])then
+            if(imgui.SliderInt('Mana Cutoff', variables['NukeManaCutoff'][1][player], 0, 100, "%.0f%% MP"))then
+                self.all[player]['NukeManaCutoff'] = imgui.GetVarValue(variables['NukeManaCutoff'][1][player]);
+                config:save();
+            end
+        end         
         if(imgui.Checkbox("Heals", variables['AutoHeal'][1][player]))then
             self.all[player]['AutoHeal'] = imgui.GetVarValue(variables['AutoHeal'][1][player]);
             config:save();
         end
         if(self.all[player]['AutoHeal'])then
-            if(imgui.SliderInt('Threshold', variables['HealThreshold'][1][player], 1, 100, "%.0f%%"))then
+            if(imgui.SliderInt('Threshold', variables['HealThreshold'][1][player], 1, 100, "%.0f%% HP"))then
                 self.all[player]['HealThreshold'] = imgui.GetVarValue(variables['HealThreshold'][1][player]);
                 config:save();
             end

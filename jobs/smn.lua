@@ -83,7 +83,10 @@ function jsmn:getBestElemental()
   return Element
 end
 
-function jsmn:siphon()
+function jsmn:siphon(resummon)
+  if (resummon == nil)then
+    resummon = false
+  end
   --THIS ASSUMES YOU HAVE ALL SPIRITS LEARNED
   local playerEntity = GetPlayerEntity();
   if (not zones[AshitaCore:GetDataManager():GetParty():GetMemberZone(0)].hostile)then
@@ -109,6 +112,7 @@ function jsmn:siphon()
       if (avatar)then print("Release "..avatar);end end)
     :next(function(self)
       AshitaCore:GetChatManager():QueueCommand('/pet "Release" <me>', -1);
+      pettarget = nil;
     end)
     :next(partial(wait, 1));
     -- end
@@ -144,9 +148,10 @@ function jsmn:siphon()
     :next(function(self)print("Releasing "..siphonElement.." Spirit"); end)
     :next(function(self)
       AshitaCore:GetChatManager():QueueCommand('/pet "Release" <me>', -1);
+      pettarget = nil;
     end)
   end
-  if (avatar)then -- If we had an avatar out already
+  if (avatar and resummon)then -- If we had an avatar out already
     command
     :next(partial(wait,1))
     :next(function(self)print("Resummoning "..avatar); end)
@@ -227,16 +232,18 @@ function jsmn:tick()
         actions.busy = true;
         actions:queue(actions:new()
         :next(function(self)
-          AshitaCore:GetChatManager():QueueCommand('/pet "Release" <me>', -1);
+          AshitaCore:GetChatManager():QueueCommand('/pet "Release" <me>', 0);
+          pettarget = nil;
         end)
-        :next(function(self) actions.busy = false; end));
+        :next(partial(wait, 1))
+        :next(function(self)actions.busy = false; end));
       end
     elseif (pettarget ~= ATTACK_TID and not buffs:AbilityOnCD("Assault"))then -- Pet is not attacking the target
       actions.busy = true;
       actions:queue(actions:new()
       :next(function(self)
         if(ATTACK_TID~=nil)then
-          AshitaCore:GetChatManager():QueueCommand('/pet "Assault" '.. ATTACK_TID, -1);
+          AshitaCore:GetChatManager():QueueCommand('/pet "Assault" '.. ATTACK_TID, 0);
         end
       end)
       :next(partial(wait, 1))
@@ -255,6 +262,7 @@ function jsmn:tick()
         :next(partial(wait, 7))
         :next(function(self)
           AshitaCore:GetChatManager():QueueCommand('/ja release <me>', 0);
+          pettarget = nil;
         end)
         :next(partial(wait, 2))
         :next(function(self) actions.busy = false; end));
@@ -277,6 +285,7 @@ function jsmn:pact(avatar, ability)
       :next(function(self)print("Release "..pet.Name); end)
       :next(function(self)
         AshitaCore:GetChatManager():QueueCommand('/pet "Release" <me>', -1);
+        pettarget = nil;
       end)
       :next(partial(wait, 1));
     else
@@ -299,7 +308,9 @@ function jsmn:pact(avatar, ability)
   if(smn.AutoRelease)then
     command:next(function(self)
       AshitaCore:GetChatManager():QueueCommand('/pet "Release" <me>', -1);
+      pettarget = nil;
     end)
+    :next(partial(wait, 1))
   end
   command
   :next(function(self) actions.busy = false; end);

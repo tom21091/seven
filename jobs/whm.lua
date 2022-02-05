@@ -27,6 +27,9 @@ function jwhm:tick()
   end
   if (buffs:SneakyTime()) then return end
   if (buffs:IdleBuffs()) then return end
+  if (ATTACK_TID == tid and cnf['AutoNuke'])then
+    self:nuke(tid);
+  end
 end
 
 function jwhm:attack(tid)
@@ -41,7 +44,8 @@ function jwhm:attack(tid)
 end
 
 function jwhm:nuke(tid, spell)
-  if (AshitaCore:GetDataManager():GetParty():GetMemberCurrentMPP(0) < 50) then return end
+  local cnf = config:get();
+  if (AshitaCore:GetDataManager():GetParty():GetMemberCurrentMPP(0) < cnf["NukeManaCutoff"]) then return end
   
   nukes:Nuke(tid, spell);
   -- AshitaCore:GetChatManager():QueueCommand('/magic Banish ' .. tid, 0);
